@@ -135,7 +135,10 @@
             <p class="text-gray-300 mb-8 text-lg leading-relaxed max-w-xl mx-auto">
                 Uji ketajaman logika dan kepekaan Anda melalui serangkaian teka-teki kasus analisis mendalam. Perhatikan detailnya, dan temukan jawabannya!
             </p>
-            <button onclick="startQuiz()" class="px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg transform transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-teal-500/50">
+            <div class="max-w-sm mx-auto mb-6">
+                <input type="text" id="username-input" placeholder="Masukkan nama Anda..." class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-light transition text-center text-lg shadow-inner">
+            </div>
+            <button onclick="startQuiz()" class="px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg transform transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-teal-500/50 w-full max-w-sm">
                 Mulai Latihan Sekarang
             </button>
         </section>
@@ -143,8 +146,13 @@
         <!-- Halaman Soal -->
         <section id="quiz-screen" class="hidden-section">
             <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                <span class="text-sm font-semibold tracking-wider text-brand-light uppercase" id="question-counter">Soal 1 dari 4</span>
-                <span class="text-sm font-semibold bg-white/10 px-3 py-1 rounded-full" id="score-display">Skor: 0</span>
+                <span class="text-sm font-semibold tracking-wider text-brand-light uppercase" id="question-counter">Soal 1</span>
+                <div class="flex items-center gap-2 md:gap-4">
+                    <span class="text-sm font-semibold bg-white/10 px-3 py-1 rounded-full" id="score-display">Benar: 0</span>
+                    <button onclick="endSession()" class="text-xs md:text-sm font-semibold bg-red-500/20 hover:bg-red-500/40 text-red-400 px-3 py-1 rounded-full transition border border-red-500/30">
+                        Berhenti & Lihat Skor
+                    </button>
+                </div>
             </div>
             
             <h2 class="text-xl md:text-2xl font-medium leading-relaxed mb-8 text-gray-100" id="case-text">
@@ -174,8 +182,8 @@
 
         <!-- Halaman Skor Akhir -->
         <section id="result-screen" class="hidden-section text-center">
-            <h2 class="text-3xl font-bold mb-2">Latihan Selesai!</h2>
-            <p class="text-gray-400 mb-8">Berikut adalah hasil analisa detektif Anda.</p>
+            <h2 class="text-3xl font-bold mb-2">Latihan Selesai, <span id="result-username"></span>!</h2>
+            <p class="text-gray-400 mb-8">Hasil analisa detektif Anda dari <span id="answered-count">0</span> soal yang dikerjakan.</p>
             
             <div class="relative w-40 h-40 mx-auto mb-8 flex items-center justify-center rounded-full bg-white/5 border-[8px] border-brand shadow-[0_0_30px_rgba(79,209,197,0.3)]">
                 <span class="text-5xl font-bold text-brand-light" id="final-score">100</span>
@@ -192,6 +200,9 @@
         </section>
 
     </main>
+
+    <!-- Data Soal Eksternal -->
+    <script src="soal.js"></script>
 
     <!-- Data dan Logika Aplikasi -->
     <script>
@@ -283,57 +294,14 @@
         // Panggil particles
         loadParticles();
 
-        // Data Soal
-        const questions = [
-            {
-                caseText: "Dua orang memesan minuman es racun yang identik di sebuah bar. Orang pertama meminumnya dengan sangat cepat dalam sekali teguk. Orang kedua duduk santai dan meminumnya perlahan. Tragisnya, orang kedua meninggal keracunan, sedangkan orang pertama sehat walafiat. Mengapa bisa demikian?",
-                options: [
-                    "Orang pertama memiliki sistem imun yang kebal terhadap racun.",
-                    "Racunnya disembunyikan di dalam es batu yang disajikan.",
-                    "Gelas orang kedua diam-diam ditukar saat dia lengah.",
-                    "Minuman itu sebenarnya tidak beracun, ia mati karena serangan jantung."
-                ],
-                correctIndex: 1,
-                explanation: "Racun tersebut sengaja dibekukan di dalam es batu. Karena orang pertama meminumnya dengan sangat cepat, es batunya belum sempat mencair dan melepaskan racun ke minumannya. Orang kedua minum perlahan, memberikan waktu bagi es untuk mencair dan meracuni minumannya."
-            },
-            {
-                caseText: "Seorang pria ditemukan gantung diri di sebuah ruangan kosong dengan pintu yang terkunci rapat dari dalam. Tidak ada meja, kursi, atau benda apapun untuk dipanjat. Jendelanya tertutup rapat. Satu-satunya petunjuk di TKP hanyalah genangan air di bawah tubuhnya. Bagaimana dia melakukannya?",
-                options: [
-                    "Atap ruangan tersebut bisa diturunkan secara mekanis.",
-                    "Seseorang membunuhnya lalu keluar melalui ventilasi udara.",
-                    "Dia memanjat menggunakan tali penyangga yang kemudian dilepasnya.",
-                    "Dia berdiri di atas balok es yang kemudian mencair sepenuhnya."
-                ],
-                correctIndex: 3,
-                explanation: "Pria tersebut membawa sebuah balok es besar ke dalam ruangan dan menggunakannya sebagai pijakan (pengganti kursi). Dia mengalungkan tali, berdiri di atas es, dan menunggu. Karena ruangan bersuhu normal, es tersebut perlahan mencair habis, meninggalkannya tergantung dengan genangan air di bawahnya."
-            },
-            {
-                caseText: "Seorang detektif menanyai 3 tersangka atas kasus pencurian rumah yang terjadi pada hari Minggu pagi. Tukang kebun beralasan, 'Saya sedang di halaman belakang menyiram bunga.' Koki beralasan, 'Saya sedang di dapur memasak sarapan.' Pembantu beralasan, 'Saya sedang di depan rumah mengambil surat kiriman pos di kotak pos.' Siapakah pembohongnya?",
-                options: [
-                    "Tukang kebun",
-                    "Koki",
-                    "Pembantu",
-                    "Tidak ada, semuanya berkata jujur"
-                ],
-                correctIndex: 2,
-                explanation: "Pembohongnya adalah Pembantu. Kejadian tersebut terjadi pada hari Minggu pagi. Kantor pos secara umum (dan dalam konteks teka-teki klasik ini) tidak melakukan pengiriman surat pada hari Minggu. Oleh karena itu, alasannya sedang mengambil surat adalah kebohongan yang membuktikan kesalahannya."
-            },
-            {
-                caseText: "Terdapat 3 buah saklar lampu di luar sebuah ruangan tertutup. Di dalam ruangan tersebut hanya terdapat 1 lampu pijar. Anda tidak bisa melihat ke dalam. Anda hanya diizinkan masuk ke ruangan itu 1 kali saja. Bagaimana cara pasti untuk mengetahui saklar mana yang terhubung ke lampu tersebut?",
-                options: [
-                    "Nyalakan semua saklar bersamaan, lalu masuk ke dalam.",
-                    "Bongkar panel saklar untuk melihat jalur kabelnya.",
-                    "Nyalakan saklar 1 (biarkan sebentar lalu matikan), nyalakan saklar 2, lalu masuk.",
-                    "Tekan tombolnya berulang kali secara acak untuk memicu korsleting."
-                ],
-                correctIndex: 2,
-                explanation: "Nyalakan saklar 1 selama sekitar 10 menit (agar bola lampu menjadi panas), lalu matikan. Segera nyalakan saklar 2 dan masuklah ke ruangan. Jika lampu menyala, berarti saklar 2. Jika lampu mati tapi saat disentuh terasa panas, berarti saklar 1. Jika lampu mati dan dingin, berarti saklar 3."
-            }
-        ];
-
-        // State Aplikasi
-        let currentQuestionIndex = 0;
-        let score = 0;
+        // State Aplikasi Offline
+        let username = '';
+        let sessionData = {
+            questions: [],
+            currentIndex: 0,
+            correctCount: 0,
+            answeredCount: 0
+        };
         let hasAnswered = false;
 
         // Referensi elemen DOM
@@ -351,25 +319,92 @@
         const feedbackExplanation = document.getElementById('feedback-explanation');
         const feedbackIcon = document.getElementById('feedback-icon');
         const nextBtn = document.getElementById('next-btn');
+        const usernameInput = document.getElementById('username-input');
 
-        // Fungsi Memulai Kuis
+        // Fungsi Shuffle Array (Fisher-Yates)
+        function shuffleArray(array) {
+            let shuffled = array.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Fungsi Memulai Kuis & Manajemen Sesi
         function startQuiz() {
+            const inputName = usernameInput.value.trim();
+            if (!inputName) {
+                usernameInput.classList.add('border-red-500', 'placeholder-red-400');
+                usernameInput.placeholder = "Nama wajib diisi untuk menyimpan sesi!";
+                setTimeout(() => {
+                    usernameInput.classList.remove('border-red-500', 'placeholder-red-400');
+                    usernameInput.placeholder = "Masukkan nama Anda...";
+                }, 3000);
+                return;
+            }
+
+            username = inputName;
+            const storageKey = 'iq_session_' + username;
+            const savedSession = localStorage.getItem(storageKey);
+
+            if (savedSession) {
+                sessionData = JSON.parse(savedSession);
+            } else {
+                // Sesi baru: acak soal dari soal.js, ambil max 20
+                let availableQuestions = typeof questions !== 'undefined' ? questions : [];
+                let shuffledQuestions = shuffleArray(availableQuestions);
+                
+                sessionData = {
+                    questions: shuffledQuestions.slice(0, 20),
+                    currentIndex: 0,
+                    correctCount: 0,
+                    answeredCount: 0
+                };
+                saveSession();
+            }
+
+            if (sessionData.questions.length === 0) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-xl z-50 fade-in';
+                errorMsg.innerText = "Error: Bank soal (soal.js) gagal dimuat atau kosong.";
+                document.body.appendChild(errorMsg);
+                setTimeout(() => errorMsg.remove(), 3000);
+                return;
+            }
+
+            // Jika sesi sudah selesai sebelumnya
+            if (sessionData.currentIndex >= sessionData.questions.length) {
+                endSession();
+                return;
+            }
+
             homeScreen.style.display = 'none';
             quizScreen.classList.remove('hidden-section');
             quizScreen.classList.add('fade-in');
-            currentQuestionIndex = 0;
-            score = 0;
             loadQuestion();
+        }
+
+        function saveSession() {
+            if (username) {
+                localStorage.setItem('iq_session_' + username, JSON.stringify(sessionData));
+            }
+        }
+
+        function clearSession() {
+            if (username) {
+                localStorage.removeItem('iq_session_' + username);
+            }
         }
 
         // Fungsi Memuat Soal
         function loadQuestion() {
             hasAnswered = false;
-            const q = questions[currentQuestionIndex];
+            const q = sessionData.questions[sessionData.currentIndex];
             
             // Update UI
-            questionCounter.innerText = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
-            scoreDisplay.innerText = `Skor: ${score}`;
+            questionCounter.innerText = `Soal ${sessionData.currentIndex + 1} dari ${sessionData.questions.length}`;
+            scoreDisplay.innerText = `Benar: ${sessionData.correctCount}`;
             caseText.innerText = q.caseText;
             
             // Sembunyikan feedback
@@ -399,7 +434,7 @@
             if (hasAnswered) return; // Cegah klik ganda
             hasAnswered = true;
 
-            const q = questions[currentQuestionIndex];
+            const q = sessionData.questions[sessionData.currentIndex];
             const isCorrect = selectedIndex === q.correctIndex;
             const allButtons = optionsContainer.querySelectorAll('button');
 
@@ -413,11 +448,13 @@
                 }
             });
 
-            // Update Skor
+            // Update State & Simpan Offline
+            sessionData.answeredCount++;
             if (isCorrect) {
-                score += (100 / questions.length);
-                scoreDisplay.innerText = `Skor: ${score}`;
+                sessionData.correctCount++;
+                scoreDisplay.innerText = `Benar: ${sessionData.correctCount}`;
             }
+            saveSession();
 
             // Tampilkan Feedback/Pembahasan
             showFeedback(isCorrect, q.explanation);
@@ -446,7 +483,7 @@
             feedbackExplanation.innerHTML = `<strong>Pembahasan:</strong><br>${explanation}`;
             
             // Ubah teks tombol Next jika ini pertanyaan terakhir
-            if (currentQuestionIndex === questions.length - 1) {
+            if (sessionData.currentIndex === sessionData.questions.length - 1) {
                 nextBtn.innerHTML = "Lihat Hasil Akhir &rarr;";
             } else {
                 nextBtn.innerHTML = "Lanjut ke Soal Berikutnya &rarr;";
@@ -455,48 +492,65 @@
 
         // Fungsi Lanjut ke Soal Berikutnya
         function nextQuestion() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
+            sessionData.currentIndex++;
+            saveSession(); // Simpan progress pindah soal
+            if (sessionData.currentIndex < sessionData.questions.length) {
                 loadQuestion();
             } else {
-                showResults();
+                endSession();
             }
         }
 
-        // Fungsi Menampilkan Hasil
-        function showResults() {
+        // Fungsi Mengakhiri Sesi (Berhenti kapan saja atau selesai)
+        function endSession() {
             quizScreen.classList.add('hidden-section');
             resultScreen.classList.remove('hidden-section');
             resultScreen.classList.add('fade-in');
 
-            document.getElementById('final-score').innerText = score;
+            document.getElementById('result-username').innerText = username;
+            document.getElementById('answered-count').innerText = sessionData.answeredCount;
+            
+            let finalScore = 0;
+            if (sessionData.answeredCount > 0) {
+                finalScore = Math.round((sessionData.correctCount / sessionData.answeredCount) * 100);
+            }
+            
+            document.getElementById('final-score').innerText = finalScore;
             
             const titleElement = document.getElementById('motivation-title');
             const textElement = document.getElementById('motivation-text');
 
-            if (score === 100) {
+            if (finalScore === 100 && sessionData.answeredCount > 0) {
                 titleElement.innerText = "Detektif Sempurna! 🕵️‍♂️";
                 titleElement.className = "text-2xl font-semibold mb-3 text-emerald-400";
-                textElement.innerText = "Luar biasa! Anda memiliki insting analitis tingkat tinggi dan kepekaan yang sangat tajam terhadap detail layaknya detektif profesional.";
-            } else if (score >= 75) {
+                textElement.innerText = "Luar biasa! Anda memiliki insting analitis tingkat tinggi dan kepekaan yang sangat tajam layaknya detektif profesional.";
+            } else if (finalScore >= 75) {
                 titleElement.innerText = "Kerja Bagus! 🔍";
                 titleElement.className = "text-2xl font-semibold mb-3 text-brand-light";
                 textElement.innerText = "Analisa Anda sudah sangat baik. Dengan sedikit latihan lagi, tidak ada kasus yang bisa mengecoh Anda.";
-            } else if (score >= 50) {
+            } else if (finalScore >= 50) {
                 titleElement.innerText = "Cukup Baik 🧐";
                 titleElement.className = "text-2xl font-semibold mb-3 text-yellow-400";
                 textElement.innerText = "Logika Anda mulai terlatih. Coba perhatikan lagi celah kecil pada skenario di masa mendatang.";
+            } else if (sessionData.answeredCount === 0) {
+                titleElement.innerText = "Belum Ada Soal Dijawab 😅";
+                titleElement.className = "text-2xl font-semibold mb-3 text-gray-400";
+                textElement.innerText = "Anda berhenti sebelum sempat memecahkan teka-teki apa pun.";
             } else {
                 titleElement.innerText = "Terus Berlatih! 📚";
                 titleElement.className = "text-2xl font-semibold mb-3 text-gray-300";
                 textElement.innerText = "Teka-teki analitis memang menjebak. Jangan menyerah, baca pembahasannya dan asah terus logika berpikir Anda!";
             }
+
+            // Bersihkan sesi offline setelah selesai melihat skor
+            clearSession();
         }
 
         // Fungsi Mengulang Kuis
         function restartQuiz() {
             resultScreen.classList.add('hidden-section');
-            startQuiz();
+            homeScreen.style.display = 'block';
+            homeScreen.classList.add('fade-in');
         }
     </script>
 </body>
