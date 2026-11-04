@@ -724,7 +724,7 @@ const questions = [
         caseText: "Seorang pria ditemukan tewas di kamar mandi apartemennya dengan luka di kepala. Pintu kamar mandi tidak terkunci. Di lantai ada sabun yang licin dan pecahan kaca. Polisi menduga korban terpeleset dan kepalanya membentur wastafel. Detektif melihat pecahan kaca berada di bawah tubuh korban, bukan di sekitarnya. Apa kesimpulannya?",
         options: [
             "Korban terpeleset dan pecahan kaca menimpanya.",
-            "Pecahan kaca di bawah tubuh korban menunjukkan korban sudah terjatuh sebelum kaca pecah—atau kaca sengaja diletakkan di bawah tubuh untuk menciptakan kesan kecelakaan; ini mengarah pada pembunuhan.",
+            "Pecahan kaca di bawah tubuh korban menunjukkan korban sudah terjatuh sesudah kaca pecah—atau kaca sengaja diletakkan di bawah tubuh untuk menciptakan kesan kecelakaan; ini mengarah pada pembunuhan.",
             "Kaca pecah karena korban jatuh.",
             "Sabun menyebabkan korban terpeleset."
         ],
