@@ -33,31 +33,43 @@
             transition: all 0.2s ease-in-out;
             position: relative;
         }
-        .option-btn:hover {
+        .option-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
         }
 
-        /* ===== STATE TERPILIH — pakai !important agar TIDAK ditimpa utility Tailwind (bg-slate-800, border-slate-600, text-slate-200) yang disuntik CDN lebih belakang di source order. ===== */
-        .option-btn.selected-option {
-            background-color: #0284c7 !important;
-            border-color: #38bdf8 !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 0 2px #38bdf8, 0 8px 20px rgba(56, 189, 248, 0.45) !important;
-            transform: translateY(-1px);
+        /* ===== STATE BENAR / SALAH (Setelah Dijawab) ===== */
+        .option-btn.correct {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+            border-color: #10b981 !important;
+            color: #34d399 !important;
         }
-        .option-btn.selected-option .option-letter {
-            background-color: #ffffff !important;
-            color: #0284c7 !important;
-            border-color: #ffffff !important;
+        .option-btn.correct .option-letter {
+            background-color: #10b981 !important;
+            color: #fff !important;
+            border-color: #10b981 !important;
         }
-        .option-btn.selected-option .check-mark {
-            opacity: 1 !important;
-            transform: scale(1) !important;
+        
+        .option-btn.incorrect {
+            background-color: rgba(239, 68, 68, 0.2) !important;
+            border-color: #ef4444 !important;
+            color: #f87171 !important;
+        }
+        .option-btn.incorrect .option-letter {
+            background-color: #ef4444 !important;
+            color: #fff !important;
+            border-color: #ef4444 !important;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+        .option-btn.faded {
+            opacity: 0.5;
         }
 
         /* ===== STATE NORMAL (belum terpilih) ===== */
-        .option-btn:not(.selected-option) {
+        .option-btn:not(.correct):not(.incorrect) {
             background-color: #1e293b;
             border-color: #475569;
             color: #e2e8f0;
@@ -98,7 +110,7 @@
             transition: all 0.2s ease-in-out;
         }
 
-        /* Indikator progres jawaban */
+        /* Indikator progres jawaban (20 titik) */
         .progress-dot {
             width: 8px;
             height: 8px;
@@ -106,9 +118,13 @@
             background-color: #475569;
             transition: all 0.2s ease-in-out;
         }
-        .progress-dot.answered {
-            background-color: #38bdf8;
-            box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+        .progress-dot.answered-correct {
+            background-color: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+        }
+        .progress-dot.answered-incorrect {
+            background-color: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
         }
         .progress-dot.current {
             background-color: #fbbf24;
@@ -116,14 +132,13 @@
             transform: scale(1.3);
         }
 
-        /* Animasi kedip singkat saat memilih, supaya user yakin klik terdaftar */
-        @keyframes optionPulse {
-            0%   { transform: scale(1); }
-            40%  { transform: scale(0.97); }
-            100% { transform: scale(1); }
+        /* Animasi feedback */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
         }
-        .option-btn.just-selected {
-            animation: optionPulse 0.18s ease-out;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -173,11 +188,20 @@
             <p id="questionText" class="text-lg md:text-xl leading-relaxed text-slate-100 font-medium"></p>
         </div>
 
-        <div id="optionsContainer" class="space-y-3 mb-8">
+        <div id="optionsContainer" class="space-y-3 mb-6">
             <!-- Options injected by JS -->
         </div>
 
-        <div class="flex justify-between mt-6">
+        <!-- Feedback Pembahasan Langsung (Muncul setelah klik opsi) -->
+        <div id="feedbackSection" class="hidden mt-4 mb-6 p-5 rounded-xl border border-slate-600 bg-slate-800/80 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="feedbackIcon"></div>
+                <h3 class="text-lg font-bold" id="feedbackTitle"></h3>
+            </div>
+            <p class="text-slate-300 text-sm md:text-base leading-relaxed" id="feedbackExplanation"></p>
+        </div>
+
+        <div class="flex justify-between mt-6 pt-4 border-t border-slate-700">
             <button id="prevBtn" onclick="prevQuestion()" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
                 &laquo; Sebelumnya
             </button>
@@ -197,14 +221,10 @@
             <p class="text-slate-400 text-sm mb-4">Skor IQ / Ketajaman Analisis</p>
             
             <div class="flex justify-between text-sm border-t border-slate-600 pt-4">
-                <span class="text-slate-300">Dikerjakan: <strong id="answeredCount" class="text-white">0</strong></span>
+                <span class="text-slate-300">Dikerjakan: <strong id="resultAnsweredCount" class="text-white">0</strong></span>
                 <span class="text-green-400">Benar: <strong id="correctCount">0</strong></span>
                 <span class="text-red-400">Salah: <strong id="wrongCount">0</strong></span>
             </div>
-        </div>
-
-        <div id="pembahasanContainer" class="text-left space-y-4 mb-8 max-h-96 overflow-y-auto pr-2 border-t border-slate-700 pt-4">
-            <!-- Pembahasan injected here -->
         </div>
 
         <button onclick="backToMenu()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-8 rounded-lg transition shadow-lg shadow-sky-500/30">
@@ -246,15 +266,13 @@
             script.onload = () => {
                 if (window.tempQuestions && window.tempQuestions.length > 0) {
                     window.allQuestions = window.allQuestions.concat(window.tempQuestions);
-                    window.tempQuestions = []; // Reset agar siap menerima file berikutnya
+                    window.tempQuestions = []; 
                 }
                 currentFileIndex++;
-                loadQuestionBanks(); // Coba muat file berikutnya
+                loadQuestionBanks(); 
             };
 
             script.onerror = () => {
-                // Berhenti mencari ketika file tidak ditemukan
-                console.log(`Pemuatan selesai. Total bank soal dimuat: ${currentFileIndex - 1}`);
                 if (window.allQuestions.length === 0) {
                     document.getElementById('loadingText').innerHTML = "<span class='text-red-400'>Error: soal.js tidak ditemukan!</span>";
                 } else {
@@ -266,14 +284,13 @@
             document.body.appendChild(script);
         }
 
-        // Jalankan loader saat halaman dibuka
         window.onload = loadQuestionBanks;
 
         // LOGIKA GAME & OFFLINE SESSION
         let session = {
             username: "",
-            questions: [], // 20 soal yang terpilih untuk sesi ini
-            answers: [],   // Jawaban user (index opsi)
+            questions: [],
+            answers: [],
             currentIndex: 0
         };
 
@@ -300,10 +317,8 @@
             const savedSession = localStorage.getItem(storageKey);
 
             if (savedSession) {
-                // Lanjutkan sesi yang ada
                 session = JSON.parse(savedSession);
             } else {
-                // Buat sesi baru dengan 20 soal acak
                 let shuffled = shuffleArray(window.allQuestions);
                 session.questions = shuffled.slice(0, Math.min(MAX_QUESTIONS, shuffled.length));
                 session.answers = new Array(session.questions.length).fill(null);
@@ -323,13 +338,15 @@
             localStorage.setItem(storageKey, JSON.stringify(session));
         }
 
-        // Huruf label A, B, C, D...
         function letterOf(idx) {
             return String.fromCharCode(65 + idx);
         }
 
         function renderQuestion() {
             const qObj = session.questions[session.currentIndex];
+            const answeredIdx = session.answers[session.currentIndex];
+            const isAnswered = answeredIdx !== null;
+
             document.getElementById('currentQuestionNum').innerText = (session.currentIndex + 1);
             document.getElementById('questionText').innerText = qObj.caseText;
             
@@ -337,31 +354,43 @@
             optsContainer.innerHTML = "";
 
             qObj.options.forEach((opt, idx) => {
-                const isSelected = session.answers[session.currentIndex] === idx;
-                // PENTING: ketika selected, JANGAN sertakan class Tailwind bg-slate-800/border-slate-600/text-slate-200
-                // karena mereka akan menimpa .selected-option (Tailwind CDN disuntik lebih belakang).
-                const baseClasses = 'option-btn w-full text-left p-4 rounded-xl border transition flex items-center gap-3';
-                const stateClasses = isSelected
-                    ? 'selected-option'
-                    : 'hover:bg-slate-700 hover:border-slate-500';
-
                 const btn = document.createElement('button');
+                let stateClasses = 'hover:bg-slate-700 hover:border-slate-500';
+                
+                if (isAnswered) {
+                    btn.disabled = true;
+                    if (idx === qObj.correctIndex) {
+                        stateClasses = 'correct'; // Jawaban yang benar akan menjadi hijau
+                    } else if (idx === answeredIdx && idx !== qObj.correctIndex) {
+                        stateClasses = 'incorrect'; // Jawaban salah yang dipilih menjadi merah
+                    } else {
+                        stateClasses = 'faded'; // Opsi lain meredup
+                    }
+                }
+
+                const baseClasses = 'option-btn w-full text-left p-4 rounded-xl border flex items-center gap-3 transition-all';
                 btn.className = `${baseClasses} ${stateClasses}`;
-                btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
+                // Tampilkan centang jika ini jawaban yang dipilih
+                const showCheck = (isAnswered && idx === answeredIdx) ? 'opacity:1; transform:scale(1);' : '';
 
                 btn.innerHTML = `
                     <span class="option-letter">${letterOf(idx)}</span>
                     <span class="flex-1 leading-relaxed">${opt}</span>
-                    <span class="check-mark" aria-hidden="true">&#10003;</span>
+                    <span class="check-mark text-slate-800" aria-hidden="true" style="${showCheck}">&#10003;</span>
                 `;
                 btn.onclick = () => selectOption(idx);
                 optsContainer.appendChild(btn);
             });
 
-            // Update indikator jumlah terjawab + progress dots
+            if (isAnswered) {
+                showFeedback(answeredIdx === qObj.correctIndex, qObj.explanation);
+            } else {
+                document.getElementById('feedbackSection').classList.add('hidden');
+            }
+
             updateAnsweredIndicator();
 
-            // Handle Tombol Navigasi
             document.getElementById('prevBtn').disabled = (session.currentIndex === 0);
             const nextBtn = document.getElementById('nextBtn');
             if (session.currentIndex === session.questions.length - 1) {
@@ -377,37 +406,68 @@
 
         function updateAnsweredIndicator() {
             const total = session.questions.length;
-            const answered = session.answers.filter(a => a !== null).length;
-            document.getElementById('answeredCounter').innerText = answered;
-
-            // Render progress dots
+            let answered = 0;
+            
             const dotsContainer = document.getElementById('progressDots');
             dotsContainer.innerHTML = '';
+            
             for (let i = 0; i < total; i++) {
+                const ans = session.answers[i];
                 const dot = document.createElement('span');
                 let cls = 'progress-dot';
-                if (session.answers[i] !== null) cls += ' answered';
-                if (i === session.currentIndex) cls += ' current';
+                
+                if (ans !== null) {
+                    answered++;
+                    const isCorrect = (ans === session.questions[i].correctIndex);
+                    cls += isCorrect ? ' answered-correct' : ' answered-incorrect';
+                }
+                
+                if (i === session.currentIndex) {
+                    cls += ' current';
+                }
+                
                 dot.className = cls;
-                dot.title = `Soal ${i + 1}` + (session.answers[i] !== null ? ' (sudah dijawab)' : ' (belum)');
+                dot.title = `Soal ${i + 1}`;
                 dotsContainer.appendChild(dot);
             }
+            
+            document.getElementById('answeredCounter').innerText = answered;
         }
 
         function selectOption(idx) {
-            const wasNull = session.answers[session.currentIndex] === null;
+            // Jangan izinkan mengubah jawaban setelah diklik
+            if (session.answers[session.currentIndex] !== null) return; 
+
             session.answers[session.currentIndex] = idx;
             saveSession();
-            renderQuestion(); // Re-render untuk efek highlight
+            renderQuestion(); 
+        }
 
-            // Beri animasi kedip singkat pada opsi yang baru dipilih supaya user yakin kliknya terdaftar
-            const buttons = document.querySelectorAll('#optionsContainer .option-btn');
-            if (buttons[idx]) {
-                buttons[idx].classList.remove('just-selected');
-                // Trigger reflow supaya animasi diulang
-                void buttons[idx].offsetWidth;
-                buttons[idx].classList.add('just-selected');
+        function showFeedback(isCorrect, explanation) {
+            const fbSec = document.getElementById('feedbackSection');
+            const fbTitle = document.getElementById('feedbackTitle');
+            const fbIcon = document.getElementById('feedbackIcon');
+            const fbExp = document.getElementById('feedbackExplanation');
+            
+            fbSec.classList.remove('hidden');
+            
+            // Trigger animasi CSS
+            void fbSec.offsetWidth; 
+            fbSec.classList.add('fade-in');
+
+            if (isCorrect) {
+                fbTitle.innerText = "Benar Sekali!";
+                fbTitle.className = "text-xl font-bold text-emerald-400";
+                fbIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`;
+                fbSec.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+            } else {
+                fbTitle.innerText = "Analisa Kurang Tepat";
+                fbTitle.className = "text-xl font-bold text-red-400";
+                fbIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`;
+                fbSec.style.borderColor = 'rgba(239, 68, 68, 0.4)';
             }
+
+            fbExp.innerHTML = `<strong class="text-sky-400">Pembahasan:</strong><br>${explanation}`;
         }
 
         function nextQuestion() {
@@ -416,7 +476,7 @@
                 saveSession();
                 renderQuestion();
             } else {
-                stopAndScore(); // Jika di soal terakhir
+                stopAndScore(); 
             }
         }
 
@@ -434,57 +494,32 @@
 
             let answeredCount = 0;
             let correctCount = 0;
-            let pembahasanHTML = `<h3 class="text-xl font-bold text-sky-400 mb-4">Pembahasan Soal yang Dikerjakan:</h3>`;
 
             session.answers.forEach((ans, idx) => {
                 if (ans !== null) {
                     answeredCount++;
-                    const qObj = session.questions[idx];
-                    const isCorrect = (ans === qObj.correctIndex);
-                    if (isCorrect) correctCount++;
-
-                    pembahasanHTML += `
-                        <div class="bg-slate-800 p-4 rounded-xl border ${isCorrect ? 'border-green-500/50' : 'border-red-500/50'}">
-                            <p class="text-sm text-slate-400 mb-2">Soal ${idx + 1}</p>
-                            <p class="text-slate-200 mb-3">${qObj.caseText}</p>
-                            <div class="text-sm mb-2">
-                                <span class="text-slate-400">Jawaban Anda:</span> 
-                                <span class="${isCorrect ? 'text-green-400' : 'text-red-400'} font-medium">
-                                    ${qObj.options[ans]}
-                                </span>
-                            </div>
-                            <div class="text-sm mt-3 p-3 bg-slate-900 rounded border border-slate-700">
-                                <strong class="text-sky-400">Pembahasan:</strong> 
-                                <span class="text-slate-300">${qObj.explanation}</span>
-                            </div>
-                        </div>
-                    `;
+                    if (ans === session.questions[idx].correctIndex) {
+                        correctCount++;
+                    }
                 }
             });
 
             const wrongCount = answeredCount - correctCount;
-            // SKOR DIHITUNG DARI BERAPA SOAL YANG DIKERJAKAN SAJA
             const score = answeredCount === 0 ? 0 : Math.round((correctCount / answeredCount) * 100);
 
             document.getElementById('resultName').innerText = session.username;
             document.getElementById('finalScore').innerText = score;
-            document.getElementById('answeredCount').innerText = answeredCount;
+            document.getElementById('resultAnsweredCount').innerText = answeredCount;
             document.getElementById('correctCount').innerText = correctCount;
             document.getElementById('wrongCount').innerText = wrongCount;
-            
-            if (answeredCount === 0) {
-                pembahasanHTML += `<p class="text-slate-400 italic text-center">Anda belum mengerjakan satupun soal.</p>`;
-            }
-            document.getElementById('pembahasanContainer').innerHTML = pembahasanHTML;
 
-            // Hapus sesi agar user bisa main dari awal dengan 20 soal baru jika kembali ke menu
             localStorage.removeItem('iq_session_' + session.username.toLowerCase());
         }
 
         function backToMenu() {
             document.getElementById('resultScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('usernameInput').value = ""; // Reset nama
+            document.getElementById('usernameInput').value = ""; 
         }
     </script>
 </body>
