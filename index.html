@@ -4,43 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Latihan IQ & Analisis Kasus</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- tsParticles -->
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles-engine@2.9.3/tsparticles.engine.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles-preset-stars@2.9.3/tsparticles.preset.stars.min.js"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Poppins', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            light: '#4fd1c5',
-                            DEFAULT: '#38b2ac',
-                            dark: '#319795',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-engine"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-basic"></script>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            color: #fff;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            min-height: 100vh;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
         }
-
         #tsparticles {
             position: fixed;
             top: 0;
@@ -49,508 +22,469 @@
             height: 100%;
             z-index: -1;
         }
-
-        /* Glassmorphism Effect */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            border-radius: 1.5rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
-
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        
-        .slide-up {
-            animation: slideUp 0.5s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Option Styling */
         .option-btn {
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
         }
 
-        .option-btn:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateX(5px);
-            border-color: rgba(255, 255, 255, 0.3);
+        /* ===== STATE TERPILIH — pakai !important agar TIDAK ditimpa utility Tailwind (bg-slate-800, border-slate-600, text-slate-200) yang disuntik CDN lebih belakang di source order. ===== */
+        .option-btn.selected-option {
+            background-color: #0284c7 !important;
+            border-color: #38bdf8 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 2px #38bdf8, 0 8px 20px rgba(56, 189, 248, 0.45) !important;
+            transform: translateY(-1px);
+        }
+        .option-btn.selected-option .option-letter {
+            background-color: #ffffff !important;
+            color: #0284c7 !important;
+            border-color: #ffffff !important;
+        }
+        .option-btn.selected-option .check-mark {
+            opacity: 1 !important;
+            transform: scale(1) !important;
         }
 
-        .option-btn.correct {
-            background: rgba(16, 185, 129, 0.2);
-            border-color: #10b981;
-            color: #34d399;
+        /* ===== STATE NORMAL (belum terpilih) ===== */
+        .option-btn:not(.selected-option) {
+            background-color: #1e293b;
+            border-color: #475569;
+            color: #e2e8f0;
         }
 
-        .option-btn.incorrect {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: #ef4444;
-            color: #f87171;
+        /* Indikator visual: lingkaran huruf + centang */
+        .option-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            border: 2px solid #475569;
+            background-color: #0f172a;
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+            transition: all 0.2s ease-in-out;
+        }
+        .check-mark {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 9999px;
+            background-color: #ffffff;
+            color: #0284c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.875rem;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease-in-out;
         }
 
-        .option-btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.7;
+        /* Indikator progres jawaban */
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background-color: #475569;
+            transition: all 0.2s ease-in-out;
         }
-        
-        .hidden-section {
-            display: none;
+        .progress-dot.answered {
+            background-color: #38bdf8;
+            box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+        }
+        .progress-dot.current {
+            background-color: #fbbf24;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+            transform: scale(1.3);
+        }
+
+        /* Animasi kedip singkat saat memilih, supaya user yakin klik terdaftar */
+        @keyframes optionPulse {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(0.97); }
+            100% { transform: scale(1); }
+        }
+        .option-btn.just-selected {
+            animation: optionPulse 0.18s ease-out;
         }
     </style>
 </head>
-<body class="flex items-center justify-center font-sans antialiased p-4">
-
-    <!-- Latar Belakang Partikel -->
+<body class="min-h-screen flex items-center justify-center p-4">
     <div id="tsparticles"></div>
 
-    <!-- Main App Container -->
-    <main class="w-full max-w-3xl relative z-10 glass-panel p-8 md:p-10 slide-up" id="app-container">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="glass-panel w-full max-w-md rounded-2xl p-8 text-center">
+        <h2 class="text-2xl font-bold text-sky-400 mb-4 animate-pulse">Memuat Bank Soal...</h2>
+        <p class="text-slate-300 text-sm" id="loadingText">Mencari soal.js...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="glass-panel w-full max-w-md rounded-2xl p-8 text-center hidden">
+        <h1 class="text-3xl font-bold text-sky-400 mb-2">Uji Analisis IQ</h1>
+        <p class="text-slate-300 mb-6 text-sm" id="totalSoalInfo"></p>
         
-        <!-- Halaman Beranda -->
-        <section id="home-screen" class="text-center">
-            <div class="inline-block p-4 rounded-full bg-brand/20 mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-brand-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
+        <input type="text" id="usernameInput" placeholder="Masukkan Nama Anda" 
+            class="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-600 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition mb-4 text-white">
+        
+        <button onclick="startGame()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-sky-500/30">
+            Mulai Sesi
+        </button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="glass-panel w-full max-w-3xl rounded-2xl p-6 md:p-8 hidden relative">
+        <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4 gap-4">
+            <div class="min-w-0">
+                <h2 class="text-lg font-semibold text-sky-400 truncate">Pemain: <span id="playerNameDisplay" class="text-white"></span></h2>
+                <p class="text-sm text-slate-400">Soal <span id="currentQuestionNum">1</span> dari 20</p>
             </div>
-            <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-teal-500">
-                Latihan IQ & Analisis Kasus
-            </h1>
-            <p class="text-gray-300 mb-8 text-lg leading-relaxed max-w-xl mx-auto">
-                Uji ketajaman logika dan kepekaan Anda melalui serangkaian teka-teki kasus analisis mendalam. Perhatikan detailnya, dan temukan jawabannya!
-            </p>
-            <div class="max-w-sm mx-auto mb-6">
-                <input type="text" id="username-input" placeholder="Masukkan nama Anda..." class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-light transition text-center text-lg shadow-inner">
+            <!-- Indikator progres jawaban: "X / 20 terjawab" -->
+            <div class="text-right shrink-0">
+                <p class="text-xs text-slate-400 mb-1">Terjawab</p>
+                <p class="text-sm font-bold"><span id="answeredCounter" class="text-sky-400">0</span><span class="text-slate-500"> / 20</span></p>
             </div>
-            <button onclick="startQuiz()" class="px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg transform transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-teal-500/50 w-full max-w-sm">
-                Mulai Latihan Sekarang
+            <button onclick="stopAndScore()" class="bg-red-500 hover:bg-red-400 text-white text-sm font-bold py-2 px-4 rounded-lg transition shadow-lg shrink-0">
+                Berhenti &amp; Lihat Skor
             </button>
-        </section>
+        </div>
 
-        <!-- Halaman Soal -->
-        <section id="quiz-screen" class="hidden-section">
-            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                <span class="text-sm font-semibold tracking-wider text-brand-light uppercase" id="question-counter">Soal 1</span>
-                <div class="flex items-center gap-2 md:gap-4">
-                    <span class="text-sm font-semibold bg-white/10 px-3 py-1 rounded-full" id="score-display">Benar: 0</span>
-                    <button onclick="endSession()" class="text-xs md:text-sm font-semibold bg-red-500/20 hover:bg-red-500/40 text-red-400 px-3 py-1 rounded-full transition border border-red-500/30">
-                        Berhenti & Lihat Skor
-                    </button>
-                </div>
-            </div>
-            
-            <h2 class="text-xl md:text-2xl font-medium leading-relaxed mb-8 text-gray-100" id="case-text">
-                <!-- Teks soal akan dimuat di sini -->
-            </h2>
+        <!-- Bar titik-tik progres per soal -->
+        <div id="progressDots" class="flex flex-wrap gap-1.5 mb-6"></div>
 
-            <div class="space-y-3" id="options-container">
-                <!-- Opsi akan dimuat di sini -->
-            </div>
+        <div class="mb-8">
+            <p id="questionText" class="text-lg md:text-xl leading-relaxed text-slate-100 font-medium"></p>
+        </div>
 
-            <!-- Pop-up Pembahasan Langsung (Awalnya disembunyikan) -->
-            <div id="feedback-section" class="hidden-section mt-8 p-5 rounded-xl border border-white/10 glass-panel fade-in">
-                <div class="flex items-center gap-3 mb-3">
-                    <div id="feedback-icon"></div>
-                    <h3 class="text-lg font-bold" id="feedback-title">Benar/Salah</h3>
-                </div>
-                <p class="text-gray-300 text-sm md:text-base leading-relaxed" id="feedback-explanation">
-                    <!-- Penjelasan akan dimuat di sini -->
-                </p>
-                <div class="mt-6 text-right">
-                    <button id="next-btn" onclick="nextQuestion()" class="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition border border-white/20">
-                        Lanjut ke Soal Berikutnya &rarr;
-                    </button>
-                </div>
-            </div>
-        </section>
+        <div id="optionsContainer" class="space-y-3 mb-8">
+            <!-- Options injected by JS -->
+        </div>
 
-        <!-- Halaman Skor Akhir -->
-        <section id="result-screen" class="hidden-section text-center">
-            <h2 class="text-3xl font-bold mb-2">Latihan Selesai, <span id="result-username"></span>!</h2>
-            <p class="text-gray-400 mb-8">Hasil analisa detektif Anda dari <span id="answered-count">0</span> soal yang dikerjakan.</p>
-            
-            <div class="relative w-40 h-40 mx-auto mb-8 flex items-center justify-center rounded-full bg-white/5 border-[8px] border-brand shadow-[0_0_30px_rgba(79,209,197,0.3)]">
-                <span class="text-5xl font-bold text-brand-light" id="final-score">100</span>
-            </div>
-
-            <h3 class="text-2xl font-semibold mb-3 text-white" id="motivation-title">Luar Biasa!</h3>
-            <p class="text-gray-300 mb-8 max-w-md mx-auto" id="motivation-text">
-                Anda memiliki insting analitis tingkat tinggi dan kepekaan luar biasa terhadap detail.
-            </p>
-
-            <button onclick="restartQuiz()" class="px-8 py-3 bg-brand hover:bg-brand-light text-slate-900 font-bold rounded-xl transition shadow-[0_0_15px_rgba(79,209,197,0.5)]">
-                Coba Lagi
+        <div class="flex justify-between mt-6">
+            <button id="prevBtn" onclick="prevQuestion()" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                &laquo; Sebelumnya
             </button>
-        </section>
+            <button id="nextBtn" onclick="nextQuestion()" class="bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-6 rounded-lg transition">
+                Selanjutnya &raquo;
+            </button>
+        </div>
+    </div>
 
-    </main>
+    <!-- Result Screen -->
+    <div id="resultScreen" class="glass-panel w-full max-w-2xl rounded-2xl p-8 text-center hidden">
+        <h2 class="text-3xl font-bold text-sky-400 mb-2">Sesi Selesai!</h2>
+        <p class="text-slate-300 mb-6">Berikut adalah hasil analisis Anda, <span id="resultName" class="font-bold text-white"></span>.</p>
+        
+        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 mb-8 inline-block w-full max-w-sm">
+            <div class="text-6xl font-black text-white mb-2" id="finalScore">0</div>
+            <p class="text-slate-400 text-sm mb-4">Skor IQ / Ketajaman Analisis</p>
+            
+            <div class="flex justify-between text-sm border-t border-slate-600 pt-4">
+                <span class="text-slate-300">Dikerjakan: <strong id="answeredCount" class="text-white">0</strong></span>
+                <span class="text-green-400">Benar: <strong id="correctCount">0</strong></span>
+                <span class="text-red-400">Salah: <strong id="wrongCount">0</strong></span>
+            </div>
+        </div>
 
-    <!-- Data Soal Eksternal -->
-    <script src="soal.js"></script>
+        <div id="pembahasanContainer" class="text-left space-y-4 mb-8 max-h-96 overflow-y-auto pr-2 border-t border-slate-700 pt-4">
+            <!-- Pembahasan injected here -->
+        </div>
 
-    <!-- Data dan Logika Aplikasi -->
+        <button onclick="backToMenu()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-8 rounded-lg transition shadow-lg shadow-sky-500/30">
+            Kembali ke Menu Utama
+        </button>
+    </div>
+
     <script>
-        // Konfigurasi dan inisialisasi tsParticles (Latar Belakang)
+        // INISIALISASI PARTICLES
         async function loadParticles() {
-            const { tsParticles } = window;
+            await loadBasic(tsParticles);
             await tsParticles.load("tsparticles", {
-                preset: "stars",
-                background: {
-                    color: {
-                        value: "transparent",
-                    },
-                },
+                background: { color: { value: "transparent" } },
+                fpsLimit: 60,
                 particles: {
-                    number: {
-                        value: 80,
-                        density: {
-                            enable: true,
-                            value_area: 800
-                        }
-                    },
-                    color: {
-                        value: ["#ffffff", "#4fd1c5", "#818cf8"]
-                    },
-                    shape: {
-                        type: "circle"
-                    },
-                    opacity: {
-                        value: 0.5,
-                        random: true,
-                        anim: {
-                            enable: true,
-                            speed: 1,
-                            opacity_min: 0.1,
-                            sync: false
-                        }
-                    },
-                    size: {
-                        value: 3,
-                        random: true,
-                        anim: {
-                            enable: true,
-                            speed: 2,
-                            size_min: 0.1,
-                            sync: false
-                        }
-                    },
-                    move: {
-                        enable: true,
-                        speed: 0.5,
-                        direction: "none",
-                        random: true,
-                        straight: false,
-                        out_mode: "out",
-                        bounce: false,
-                    }
-                },
-                interactivity: {
-                    detect_on: "canvas",
-                    events: {
-                        onhover: {
-                            enable: true,
-                            mode: "bubble"
-                        },
-                        onclick: {
-                            enable: true,
-                            mode: "repulse"
-                        },
-                        resize: true
-                    },
-                    modes: {
-                        bubble: {
-                            distance: 200,
-                            size: 6,
-                            duration: 2,
-                            opacity: 0.8,
-                            speed: 3
-                        },
-                        repulse: {
-                            distance: 200,
-                            duration: 0.4
-                        }
-                    }
-                },
-                retina_detect: true
+                    color: { value: ["#38bdf8", "#818cf8", "#e2e8f0"] },
+                    links: { enable: true, color: "#334155", distance: 150, opacity: 0.4, width: 1 },
+                    move: { enable: true, speed: 1.2, outModes: { default: "bounce" } },
+                    number: { density: { enable: true, area: 800 }, value: 60 },
+                    opacity: { value: 0.6 },
+                    shape: { type: "circle" },
+                    size: { value: { min: 1, max: 3 } }
+                }
             });
         }
-        
-        // Panggil particles
         loadParticles();
 
-        // State Aplikasi Offline
-        let username = '';
-        let sessionData = {
-            questions: [],
-            currentIndex: 0,
-            correctCount: 0,
-            answeredCount: 0
-        };
-        let hasAnswered = false;
+        // LOGIKA AUTO-LOADER BANK SOAL
+        window.allQuestions = [];
+        let currentFileIndex = 1;
 
-        // Referensi elemen DOM
-        const homeScreen = document.getElementById('home-screen');
-        const quizScreen = document.getElementById('quiz-screen');
-        const resultScreen = document.getElementById('result-screen');
-        
-        const questionCounter = document.getElementById('question-counter');
-        const scoreDisplay = document.getElementById('score-display');
-        const caseText = document.getElementById('case-text');
-        const optionsContainer = document.getElementById('options-container');
-        
-        const feedbackSection = document.getElementById('feedback-section');
-        const feedbackTitle = document.getElementById('feedback-title');
-        const feedbackExplanation = document.getElementById('feedback-explanation');
-        const feedbackIcon = document.getElementById('feedback-icon');
-        const nextBtn = document.getElementById('next-btn');
-        const usernameInput = document.getElementById('username-input');
+        function loadQuestionBanks() {
+            let script = document.createElement('script');
+            let filename = currentFileIndex === 1 ? 'soal.js' : `soal${currentFileIndex}.js`;
+            
+            document.getElementById('loadingText').innerText = `Mencari ${filename}...`;
+            script.src = filename;
 
-        // Fungsi Shuffle Array (Fisher-Yates)
-        function shuffleArray(array) {
-            let shuffled = array.slice();
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
+            script.onload = () => {
+                if (window.tempQuestions && window.tempQuestions.length > 0) {
+                    window.allQuestions = window.allQuestions.concat(window.tempQuestions);
+                    window.tempQuestions = []; // Reset agar siap menerima file berikutnya
+                }
+                currentFileIndex++;
+                loadQuestionBanks(); // Coba muat file berikutnya
+            };
+
+            script.onerror = () => {
+                // Berhenti mencari ketika file tidak ditemukan
+                console.log(`Pemuatan selesai. Total bank soal dimuat: ${currentFileIndex - 1}`);
+                if (window.allQuestions.length === 0) {
+                    document.getElementById('loadingText').innerHTML = "<span class='text-red-400'>Error: soal.js tidak ditemukan!</span>";
+                } else {
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('totalSoalInfo').innerText = `Total ${window.allQuestions.length} soal tersedia di dalam sistem.`;
+                }
+            };
+            document.body.appendChild(script);
         }
 
-        // Fungsi Memulai Kuis & Manajemen Sesi
-        function startQuiz() {
-            const inputName = usernameInput.value.trim();
-            if (!inputName) {
-                usernameInput.classList.add('border-red-500', 'placeholder-red-400');
-                usernameInput.placeholder = "Nama wajib diisi untuk menyimpan sesi!";
-                setTimeout(() => {
-                    usernameInput.classList.remove('border-red-500', 'placeholder-red-400');
-                    usernameInput.placeholder = "Masukkan nama Anda...";
-                }, 3000);
+        // Jalankan loader saat halaman dibuka
+        window.onload = loadQuestionBanks;
+
+        // LOGIKA GAME & OFFLINE SESSION
+        let session = {
+            username: "",
+            questions: [], // 20 soal yang terpilih untuk sesi ini
+            answers: [],   // Jawaban user (index opsi)
+            currentIndex: 0
+        };
+
+        const MAX_QUESTIONS = 20;
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('usernameInput').value.trim();
+            if (!nameInput) {
+                alert("Silakan masukkan nama Anda terlebih dahulu.");
                 return;
             }
 
-            username = inputName;
-            const storageKey = 'iq_session_' + username;
+            session.username = nameInput;
+            const storageKey = 'iq_session_' + nameInput.toLowerCase();
             const savedSession = localStorage.getItem(storageKey);
 
             if (savedSession) {
-                sessionData = JSON.parse(savedSession);
+                // Lanjutkan sesi yang ada
+                session = JSON.parse(savedSession);
             } else {
-                // Sesi baru: acak soal dari soal.js, ambil max 20
-                let availableQuestions = typeof questions !== 'undefined' ? questions : [];
-                let shuffledQuestions = shuffleArray(availableQuestions);
-                
-                sessionData = {
-                    questions: shuffledQuestions.slice(0, 20),
-                    currentIndex: 0,
-                    correctCount: 0,
-                    answeredCount: 0
-                };
+                // Buat sesi baru dengan 20 soal acak
+                let shuffled = shuffleArray(window.allQuestions);
+                session.questions = shuffled.slice(0, Math.min(MAX_QUESTIONS, shuffled.length));
+                session.answers = new Array(session.questions.length).fill(null);
+                session.currentIndex = 0;
                 saveSession();
             }
 
-            if (sessionData.questions.length === 0) {
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-xl z-50 fade-in';
-                errorMsg.innerText = "Error: Bank soal (soal.js) gagal dimuat atau kosong.";
-                document.body.appendChild(errorMsg);
-                setTimeout(() => errorMsg.remove(), 3000);
-                return;
-            }
-
-            // Jika sesi sudah selesai sebelumnya
-            if (sessionData.currentIndex >= sessionData.questions.length) {
-                endSession();
-                return;
-            }
-
-            homeScreen.style.display = 'none';
-            quizScreen.classList.remove('hidden-section');
-            quizScreen.classList.add('fade-in');
-            loadQuestion();
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('playerNameDisplay').innerText = session.username;
+            
+            renderQuestion();
         }
 
         function saveSession() {
-            if (username) {
-                localStorage.setItem('iq_session_' + username, JSON.stringify(sessionData));
-            }
+            const storageKey = 'iq_session_' + session.username.toLowerCase();
+            localStorage.setItem(storageKey, JSON.stringify(session));
         }
 
-        function clearSession() {
-            if (username) {
-                localStorage.removeItem('iq_session_' + username);
-            }
+        // Huruf label A, B, C, D...
+        function letterOf(idx) {
+            return String.fromCharCode(65 + idx);
         }
 
-        // Fungsi Memuat Soal
-        function loadQuestion() {
-            hasAnswered = false;
-            const q = sessionData.questions[sessionData.currentIndex];
+        function renderQuestion() {
+            const qObj = session.questions[session.currentIndex];
+            document.getElementById('currentQuestionNum').innerText = (session.currentIndex + 1);
+            document.getElementById('questionText').innerText = qObj.caseText;
             
-            // Update UI
-            questionCounter.innerText = `Soal ${sessionData.currentIndex + 1} dari ${sessionData.questions.length}`;
-            scoreDisplay.innerText = `Benar: ${sessionData.correctCount}`;
-            caseText.innerText = q.caseText;
-            
-            // Sembunyikan feedback
-            feedbackSection.classList.add('hidden-section');
-            feedbackSection.classList.remove('fade-in');
+            const optsContainer = document.getElementById('optionsContainer');
+            optsContainer.innerHTML = "";
 
-            // Render opsi jawaban
-            optionsContainer.innerHTML = '';
-            const labels = ['A', 'B', 'C', 'D'];
-            
-            q.options.forEach((opt, index) => {
+            qObj.options.forEach((opt, idx) => {
+                const isSelected = session.answers[session.currentIndex] === idx;
+                // PENTING: ketika selected, JANGAN sertakan class Tailwind bg-slate-800/border-slate-600/text-slate-200
+                // karena mereka akan menimpa .selected-option (Tailwind CDN disuntik lebih belakang).
+                const baseClasses = 'option-btn w-full text-left p-4 rounded-xl border transition flex items-center gap-3';
+                const stateClasses = isSelected
+                    ? 'selected-option'
+                    : 'hover:bg-slate-700 hover:border-slate-500';
+
                 const btn = document.createElement('button');
-                btn.className = 'w-full text-left p-4 rounded-xl option-btn flex items-start gap-4';
+                btn.className = `${baseClasses} ${stateClasses}`;
+                btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
                 btn.innerHTML = `
-                    <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 font-bold text-brand-light">
-                        ${labels[index]}
-                    </span>
-                    <span class="mt-1">${opt}</span>
+                    <span class="option-letter">${letterOf(idx)}</span>
+                    <span class="flex-1 leading-relaxed">${opt}</span>
+                    <span class="check-mark" aria-hidden="true">&#10003;</span>
                 `;
-                btn.onclick = () => selectOption(index, btn);
-                optionsContainer.appendChild(btn);
+                btn.onclick = () => selectOption(idx);
+                optsContainer.appendChild(btn);
             });
+
+            // Update indikator jumlah terjawab + progress dots
+            updateAnsweredIndicator();
+
+            // Handle Tombol Navigasi
+            document.getElementById('prevBtn').disabled = (session.currentIndex === 0);
+            const nextBtn = document.getElementById('nextBtn');
+            if (session.currentIndex === session.questions.length - 1) {
+                nextBtn.innerText = "Selesai & Nilai";
+                nextBtn.classList.replace('bg-sky-600', 'bg-green-600');
+                nextBtn.classList.replace('hover:bg-sky-500', 'hover:bg-green-500');
+            } else {
+                nextBtn.innerText = "Selanjutnya \u00BB";
+                nextBtn.classList.replace('bg-green-600', 'bg-sky-600');
+                nextBtn.classList.replace('hover:bg-green-500', 'hover:bg-sky-500');
+            }
         }
 
-        // Fungsi Memilih Jawaban
-        function selectOption(selectedIndex, btnElement) {
-            if (hasAnswered) return; // Cegah klik ganda
-            hasAnswered = true;
+        function updateAnsweredIndicator() {
+            const total = session.questions.length;
+            const answered = session.answers.filter(a => a !== null).length;
+            document.getElementById('answeredCounter').innerText = answered;
 
-            const q = sessionData.questions[sessionData.currentIndex];
-            const isCorrect = selectedIndex === q.correctIndex;
-            const allButtons = optionsContainer.querySelectorAll('button');
+            // Render progress dots
+            const dotsContainer = document.getElementById('progressDots');
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < total; i++) {
+                const dot = document.createElement('span');
+                let cls = 'progress-dot';
+                if (session.answers[i] !== null) cls += ' answered';
+                if (i === session.currentIndex) cls += ' current';
+                dot.className = cls;
+                dot.title = `Soal ${i + 1}` + (session.answers[i] !== null ? ' (sudah dijawab)' : ' (belum)');
+                dotsContainer.appendChild(dot);
+            }
+        }
 
-            // Nonaktifkan semua tombol dan tandai jawaban yang benar/salah
-            allButtons.forEach((btn, index) => {
-                btn.disabled = true;
-                if (index === q.correctIndex) {
-                    btn.classList.add('correct');
-                } else if (index === selectedIndex && !isCorrect) {
-                    btn.classList.add('incorrect');
+        function selectOption(idx) {
+            const wasNull = session.answers[session.currentIndex] === null;
+            session.answers[session.currentIndex] = idx;
+            saveSession();
+            renderQuestion(); // Re-render untuk efek highlight
+
+            // Beri animasi kedip singkat pada opsi yang baru dipilih supaya user yakin kliknya terdaftar
+            const buttons = document.querySelectorAll('#optionsContainer .option-btn');
+            if (buttons[idx]) {
+                buttons[idx].classList.remove('just-selected');
+                // Trigger reflow supaya animasi diulang
+                void buttons[idx].offsetWidth;
+                buttons[idx].classList.add('just-selected');
+            }
+        }
+
+        function nextQuestion() {
+            if (session.currentIndex < session.questions.length - 1) {
+                session.currentIndex++;
+                saveSession();
+                renderQuestion();
+            } else {
+                stopAndScore(); // Jika di soal terakhir
+            }
+        }
+
+        function prevQuestion() {
+            if (session.currentIndex > 0) {
+                session.currentIndex--;
+                saveSession();
+                renderQuestion();
+            }
+        }
+
+        function stopAndScore() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            let answeredCount = 0;
+            let correctCount = 0;
+            let pembahasanHTML = `<h3 class="text-xl font-bold text-sky-400 mb-4">Pembahasan Soal yang Dikerjakan:</h3>`;
+
+            session.answers.forEach((ans, idx) => {
+                if (ans !== null) {
+                    answeredCount++;
+                    const qObj = session.questions[idx];
+                    const isCorrect = (ans === qObj.correctIndex);
+                    if (isCorrect) correctCount++;
+
+                    pembahasanHTML += `
+                        <div class="bg-slate-800 p-4 rounded-xl border ${isCorrect ? 'border-green-500/50' : 'border-red-500/50'}">
+                            <p class="text-sm text-slate-400 mb-2">Soal ${idx + 1}</p>
+                            <p class="text-slate-200 mb-3">${qObj.caseText}</p>
+                            <div class="text-sm mb-2">
+                                <span class="text-slate-400">Jawaban Anda:</span> 
+                                <span class="${isCorrect ? 'text-green-400' : 'text-red-400'} font-medium">
+                                    ${qObj.options[ans]}
+                                </span>
+                            </div>
+                            <div class="text-sm mt-3 p-3 bg-slate-900 rounded border border-slate-700">
+                                <strong class="text-sky-400">Pembahasan:</strong> 
+                                <span class="text-slate-300">${qObj.explanation}</span>
+                            </div>
+                        </div>
+                    `;
                 }
             });
 
-            // Update State & Simpan Offline
-            sessionData.answeredCount++;
-            if (isCorrect) {
-                sessionData.correctCount++;
-                scoreDisplay.innerText = `Benar: ${sessionData.correctCount}`;
-            }
-            saveSession();
+            const wrongCount = answeredCount - correctCount;
+            // SKOR DIHITUNG DARI BERAPA SOAL YANG DIKERJAKAN SAJA
+            const score = answeredCount === 0 ? 0 : Math.round((correctCount / answeredCount) * 100);
 
-            // Tampilkan Feedback/Pembahasan
-            showFeedback(isCorrect, q.explanation);
+            document.getElementById('resultName').innerText = session.username;
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('answeredCount').innerText = answeredCount;
+            document.getElementById('correctCount').innerText = correctCount;
+            document.getElementById('wrongCount').innerText = wrongCount;
+            
+            if (answeredCount === 0) {
+                pembahasanHTML += `<p class="text-slate-400 italic text-center">Anda belum mengerjakan satupun soal.</p>`;
+            }
+            document.getElementById('pembahasanContainer').innerHTML = pembahasanHTML;
+
+            // Hapus sesi agar user bisa main dari awal dengan 20 soal baru jika kembali ke menu
+            localStorage.removeItem('iq_session_' + session.username.toLowerCase());
         }
 
-        // Fungsi Menampilkan Pembahasan
-        function showFeedback(isCorrect, explanation) {
-            feedbackSection.classList.remove('hidden-section');
-            
-            // Force reflow for animation restart
-            void feedbackSection.offsetWidth; 
-            feedbackSection.classList.add('fade-in');
-
-            if (isCorrect) {
-                feedbackTitle.innerText = "Benar Sekali!";
-                feedbackTitle.className = "text-xl font-bold text-emerald-400";
-                feedbackIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`;
-                feedbackSection.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-            } else {
-                feedbackTitle.innerText = "Analisa Kurang Tepat";
-                feedbackTitle.className = "text-xl font-bold text-red-400";
-                feedbackIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`;
-                feedbackSection.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-            }
-
-            feedbackExplanation.innerHTML = `<strong>Pembahasan:</strong><br>${explanation}`;
-            
-            // Ubah teks tombol Next jika ini pertanyaan terakhir
-            if (sessionData.currentIndex === sessionData.questions.length - 1) {
-                nextBtn.innerHTML = "Lihat Hasil Akhir &rarr;";
-            } else {
-                nextBtn.innerHTML = "Lanjut ke Soal Berikutnya &rarr;";
-            }
-        }
-
-        // Fungsi Lanjut ke Soal Berikutnya
-        function nextQuestion() {
-            sessionData.currentIndex++;
-            saveSession(); // Simpan progress pindah soal
-            if (sessionData.currentIndex < sessionData.questions.length) {
-                loadQuestion();
-            } else {
-                endSession();
-            }
-        }
-
-        // Fungsi Mengakhiri Sesi (Berhenti kapan saja atau selesai)
-        function endSession() {
-            quizScreen.classList.add('hidden-section');
-            resultScreen.classList.remove('hidden-section');
-            resultScreen.classList.add('fade-in');
-
-            document.getElementById('result-username').innerText = username;
-            document.getElementById('answered-count').innerText = sessionData.answeredCount;
-            
-            let finalScore = 0;
-            if (sessionData.answeredCount > 0) {
-                finalScore = Math.round((sessionData.correctCount / sessionData.answeredCount) * 100);
-            }
-            
-            document.getElementById('final-score').innerText = finalScore;
-            
-            const titleElement = document.getElementById('motivation-title');
-            const textElement = document.getElementById('motivation-text');
-
-            if (finalScore === 100 && sessionData.answeredCount > 0) {
-                titleElement.innerText = "Detektif Sempurna! 🕵️‍♂️";
-                titleElement.className = "text-2xl font-semibold mb-3 text-emerald-400";
-                textElement.innerText = "Luar biasa! Anda memiliki insting analitis tingkat tinggi dan kepekaan yang sangat tajam layaknya detektif profesional.";
-            } else if (finalScore >= 75) {
-                titleElement.innerText = "Kerja Bagus! 🔍";
-                titleElement.className = "text-2xl font-semibold mb-3 text-brand-light";
-                textElement.innerText = "Analisa Anda sudah sangat baik. Dengan sedikit latihan lagi, tidak ada kasus yang bisa mengecoh Anda.";
-            } else if (finalScore >= 50) {
-                titleElement.innerText = "Cukup Baik 🧐";
-                titleElement.className = "text-2xl font-semibold mb-3 text-yellow-400";
-                textElement.innerText = "Logika Anda mulai terlatih. Coba perhatikan lagi celah kecil pada skenario di masa mendatang.";
-            } else if (sessionData.answeredCount === 0) {
-                titleElement.innerText = "Belum Ada Soal Dijawab 😅";
-                titleElement.className = "text-2xl font-semibold mb-3 text-gray-400";
-                textElement.innerText = "Anda berhenti sebelum sempat memecahkan teka-teki apa pun.";
-            } else {
-                titleElement.innerText = "Terus Berlatih! 📚";
-                titleElement.className = "text-2xl font-semibold mb-3 text-gray-300";
-                textElement.innerText = "Teka-teki analitis memang menjebak. Jangan menyerah, baca pembahasannya dan asah terus logika berpikir Anda!";
-            }
-
-            // Bersihkan sesi offline setelah selesai melihat skor
-            clearSession();
-        }
-
-        // Fungsi Mengulang Kuis
-        function restartQuiz() {
-            resultScreen.classList.add('hidden-section');
-            homeScreen.style.display = 'block';
-            homeScreen.classList.add('fade-in');
+        function backToMenu() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('usernameInput').value = ""; // Reset nama
         }
     </script>
 </body>
