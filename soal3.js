@@ -204,18 +204,6 @@ var tempQuestions = [
         correctIndex: 1,
         explanation: "Jumlah pecahan 1/2 + 1/4 + 1/5 = 10/20 + 5/20 + 4/20 = 19/20. Artinya ketiga orang hanya berhak atas 19/20 dari total. Dengan 20 koin (19 + 1 pinjaman), bagian mereka: 10, 5, dan 4 = 19 koin. Sisa 1 koin dikembalikan. Cara ini sah karena total bagian memang 19/20, bukan 1."
     },
-    // Soal 18 — Kunci: opsi 3 (HARGA — level Diophantus)
-    {
-        caseText: "Seorang pria membeli 4 buku dan 2 pulpen dengan harga Rp90.000. Ia membeli lagi 2 buku dan 5 pulpen dengan harga Rp80.000. Berapa harga 1 buku ditambah 2 pulpen?",
-        options: [
-            "Rp25.000, karena harga buku Rp15.000 dan pulpen Rp5.000 setelah eliminasi.",
-            "Rp35.000, karena harga buku Rp20.000 dan pulpen Rp10.000 setelah eliminasi.",
-            "Rp30.000, karena harga buku Rp15.000 dan pulpen Rp10.000 setelah eliminasi.",
-            "Rp40.000, karena harga buku Rp25.000 dan pulpen Rp10.000 setelah eliminasi."
-        ],
-        correctIndex: 3,
-        explanation: "Misalkan buku = x, pulpen = y. 4x + 2y = 90.000 dan 2x + 5y = 80.000. Kalikan kedua dengan 2: 4x + 10y = 160.000. Kurangkan dengan pertama: 8y = 70.000 → y = 8.750. Substitusi: 4x + 17.500 = 90.000 → 4x = 72.500 → x = 18.125. Maka x + 2y = 18.125 + 17.500 = 35.625. Opsi yang paling mendekati adalah Rp35.000. Secara matematis, harga buku Rp18.125 dan pulpen Rp8.750."
-    },
     // Soal 19 — Kunci: opsi 0 (PROYEK — level Diophantus)
     {
         caseText: "Sebuah proyek dapat diselesaikan oleh 20 pekerja dalam 30 hari. Setelah 10 hari bekerja, 5 pekerja berhenti. Setelah 5 hari berikutnya, 5 pekerja tambahan bergabung. Berapa hari total yang dibutuhkan untuk menyelesaikan proyek?",
