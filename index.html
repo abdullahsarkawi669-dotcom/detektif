@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latihan IQ & Analisis Kasus</title>
+    <title>Latihan IQ &amp; Analisis Kasus</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles-engine"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles-basic"></script>
@@ -14,15 +14,29 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
         }
+        /* Lapisan partikel BELAKANG (di belakang panel) */
         #tsparticles {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
+            z-index: 0;
+            pointer-events: none;
+        }
+        /* Lapisan partikel DEPAN (di atas soal, tidak menghalangi klik) */
+        #tsparticlesFront {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            pointer-events: none;
         }
         .glass-panel {
+            position: relative;
+            z-index: 2;
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -49,7 +63,7 @@
             color: #fff !important;
             border-color: #10b981 !important;
         }
-        
+
         .option-btn.incorrect {
             background-color: rgba(239, 68, 68, 0.2) !important;
             border-color: #ef4444 !important;
@@ -140,28 +154,109 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Badge sumber soal (soal.js / soal2.js / soal3.js) */
+        .source-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.1rem 0.45rem;
+            border-radius: 0.3rem;
+            background: rgba(56, 189, 248, 0.15);
+            color: #7dd3fc;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            margin-left: 0.5rem;
+            vertical-align: middle;
+            letter-spacing: 0.02em;
+        }
+
+        /* Daftar riwayat */
+        .history-list {
+            max-height: 62vh;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .history-list::-webkit-scrollbar { width: 6px; }
+        .history-list::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+        .history-list::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .history-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .history-item:hover {
+            background: rgba(56, 189, 248, 0.08);
+            border-color: rgba(56, 189, 248, 0.4);
+            transform: translateX(4px);
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
+    <!-- Lapisan partikel & efek visual -->
     <div id="tsparticles"></div>
+    <div id="tsparticlesFront"></div>
 
     <!-- Loading Screen -->
     <div id="loadingScreen" class="glass-panel w-full max-w-md rounded-2xl p-8 text-center">
         <h2 class="text-2xl font-bold text-sky-400 mb-4 animate-pulse">Memuat Bank Soal...</h2>
         <p class="text-slate-300 text-sm" id="loadingText">Mencari soal.js...</p>
+        <p class="text-slate-500 text-xs mt-2" id="loadingProgress"></p>
     </div>
 
     <!-- Login Screen -->
     <div id="loginScreen" class="glass-panel w-full max-w-md rounded-2xl p-8 text-center hidden">
         <h1 class="text-3xl font-bold text-sky-400 mb-2">Uji Analisis IQ</h1>
         <p class="text-slate-300 mb-6 text-sm" id="totalSoalInfo"></p>
-        
-        <input type="text" id="usernameInput" placeholder="Masukkan Nama Anda" 
+
+        <input type="text" id="usernameInput" placeholder="Masukkan Nama Anda"
             class="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-600 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition mb-4 text-white">
-        
-        <button onclick="startGame()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-sky-500/30">
-            Mulai Sesi
-        </button>
+
+        <div class="space-y-3">
+            <button onclick="startGame(true)" id="resumeBtn" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-amber-500/30 hidden">
+                Lanjutkan Sesi Sebelumnya
+            </button>
+            <button onclick="startGame(false)" id="startBtn" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-sky-500/30">
+                Mulai Sesi Baru
+            </button>
+            <button onclick="showHistory()" id="historyBtn" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-lg transition hidden">
+                Lihat Riwayat Sesi
+            </button>
+        </div>
+        <p class="text-slate-500 text-xs mt-4">Rekam jejak sesi tersimpan otomatis di perangkat ini (ponsel maupun komputer).</p>
+    </div>
+
+    <!-- History List Screen -->
+    <div id="historyScreen" class="glass-panel w-full max-w-2xl rounded-2xl p-6 md:p-8 hidden">
+        <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4 gap-3">
+            <h2 class="text-2xl font-bold text-sky-400">Riwayat Sesi</h2>
+            <div class="flex gap-2">
+                <button onclick="clearHistory()" class="bg-red-900/60 hover:bg-red-800 text-red-200 text-xs font-bold py-2 px-3 rounded-lg transition border border-red-700">
+                    Hapus Riwayat
+                </button>
+                <button onclick="backToLoginFromHistory()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition">
+                    &laquo; Kembali
+                </button>
+            </div>
+        </div>
+        <p class="text-slate-400 text-sm mb-4">Rekam jejak permainan yang tersimpan lokal di perangkat ini. Klik salah satu untuk melihat detail jawaban dan pembahasan.</p>
+        <div id="historyListContainer" class="history-list space-y-3"></div>
+        <div id="historyEmpty" class="text-center text-slate-500 py-8 hidden">
+            Belum ada riwayat permainan. Mulai sesi pertamamu dari menu utama!
+        </div>
+    </div>
+
+    <!-- History Detail Screen -->
+    <div id="historyDetailScreen" class="glass-panel w-full max-w-3xl rounded-2xl p-6 md:p-8 hidden">
+        <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4 gap-3">
+            <div class="min-w-0">
+                <h2 class="text-2xl font-bold text-sky-400">Detail Sesi</h2>
+                <p id="historyDetailMeta" class="text-sm text-slate-400 mt-1"></p>
+            </div>
+            <button onclick="backToHistoryList()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition shrink-0">
+                &laquo; Kembali
+            </button>
+        </div>
+        <div id="historyDetailScore" class="bg-slate-800/50 rounded-xl p-4 border border-slate-700 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-center"></div>
+        <div id="historyDetailQuestions" class="space-y-4 max-h-[55vh] overflow-y-auto pr-2"></div>
     </div>
 
     <!-- Game Screen -->
@@ -169,19 +264,17 @@
         <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4 gap-4">
             <div class="min-w-0">
                 <h2 class="text-lg font-semibold text-sky-400 truncate">Pemain: <span id="playerNameDisplay" class="text-white"></span></h2>
-                <p class="text-sm text-slate-400">Soal <span id="currentQuestionNum">1</span> dari 20</p>
+                <p class="text-sm text-slate-400">Soal <span id="currentQuestionNum">1</span> dari <span id="totalQuestionCount">20</span></p>
             </div>
-            <!-- Indikator progres jawaban: "X / 20 terjawab" -->
             <div class="text-right shrink-0">
                 <p class="text-xs text-slate-400 mb-1">Terjawab</p>
-                <p class="text-sm font-bold"><span id="answeredCounter" class="text-sky-400">0</span><span class="text-slate-500"> / 20</span></p>
+                <p class="text-sm font-bold"><span id="answeredCounter" class="text-sky-400">0</span><span class="text-slate-500" id="totalAnswerable"> / 20</span></p>
             </div>
             <button onclick="stopAndScore()" class="bg-red-500 hover:bg-red-400 text-white text-sm font-bold py-2 px-4 rounded-lg transition shadow-lg shrink-0">
                 Berhenti &amp; Lihat Skor
             </button>
         </div>
 
-        <!-- Bar titik-tik progres per soal -->
         <div id="progressDots" class="flex flex-wrap gap-1.5 mb-6"></div>
 
         <div class="mb-8">
@@ -192,7 +285,6 @@
             <!-- Options injected by JS -->
         </div>
 
-        <!-- Feedback Pembahasan Langsung (Muncul setelah klik opsi) -->
         <div id="feedbackSection" class="hidden mt-4 mb-6 p-5 rounded-xl border border-slate-600 bg-slate-800/80 transition-all">
             <div class="flex items-center gap-3 mb-3">
                 <div id="feedbackIcon"></div>
@@ -215,27 +307,37 @@
     <div id="resultScreen" class="glass-panel w-full max-w-2xl rounded-2xl p-8 text-center hidden">
         <h2 class="text-3xl font-bold text-sky-400 mb-2">Sesi Selesai!</h2>
         <p class="text-slate-300 mb-6">Berikut adalah hasil analisis Anda, <span id="resultName" class="font-bold text-white"></span>.</p>
-        
-        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 mb-8 inline-block w-full max-w-sm">
+
+        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 mb-6 inline-block w-full max-w-sm">
             <div class="text-6xl font-black text-white mb-2" id="finalScore">0</div>
             <p class="text-slate-400 text-sm mb-4">Skor IQ / Ketajaman Analisis</p>
-            
+
             <div class="flex justify-between text-sm border-t border-slate-600 pt-4">
                 <span class="text-slate-300">Dikerjakan: <strong id="resultAnsweredCount" class="text-white">0</strong></span>
                 <span class="text-green-400">Benar: <strong id="correctCount">0</strong></span>
                 <span class="text-red-400">Salah: <strong id="wrongCount">0</strong></span>
             </div>
         </div>
+        <p class="text-slate-400 text-xs mb-6" id="resultSavedNote">Sesi ini telah disimpan ke riwayat lokal di perangkat Anda.</p>
 
-        <button onclick="backToMenu()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-8 rounded-lg transition shadow-lg shadow-sky-500/30">
-            Kembali ke Menu Utama
-        </button>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button onclick="showHistory()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg">
+                Lihat Riwayat
+            </button>
+            <button onclick="backToMenu()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-8 rounded-lg transition shadow-lg shadow-sky-500/30">
+                Kembali ke Menu
+            </button>
+        </div>
     </div>
 
     <script>
-        // INISIALISASI PARTICLES
+        // ===================================================================
+        // 1) PARTIKEL LATAR BELAKANG (di belakang panel)
+        // ===================================================================
         async function loadParticles() {
             await loadBasic(tsParticles);
+
+            // Partikel belakang: dengan link antar titik (efek konstelasi)
             await tsParticles.load("tsparticles", {
                 background: { color: { value: "transparent" } },
                 fpsLimit: 60,
@@ -249,36 +351,69 @@
                     size: { value: { min: 1, max: 3 } }
                 }
             });
+
+            // Partikel depan: melayang di atas soal, halus & tidak mengganggu
+            await tsParticles.load("tsparticlesFront", {
+                background: { color: { value: "transparent" } },
+                fpsLimit: 60,
+                particles: {
+                    color: { value: ["#f472b6", "#38bdf8", "#c4b5fd", "#fde68a"] },
+                    links: { enable: false },
+                    move: {
+                        enable: true,
+                        speed: 0.6,
+                        direction: "none",
+                        random: true,
+                        outModes: { default: "out" }
+                    },
+                    number: { density: { enable: true, area: 1200 }, value: 35 },
+                    opacity: { value: { min: 0.2, max: 0.55 } },
+                    shape: { type: "circle" },
+                    size: { value: { min: 1, max: 2.5 } }
+                },
+                interactivity: { events: { enable: false } }
+            });
         }
         loadParticles();
 
-        // LOGIKA AUTO-LOADER BANK SOAL
+        // ===================================================================
+        // 2) AUTO-LOADER BANK SOAL (soal.js, soal2.js, soal3.js, ...)
+        //    Setiap soal ditandai dengan sumber file-nya agar bisa di-interleave.
+        // ===================================================================
         window.allQuestions = [];
         let currentFileIndex = 1;
+        const loadedSources = [];
 
         function loadQuestionBanks() {
-            let script = document.createElement('script');
-            let filename = currentFileIndex === 1 ? 'soal.js' : `soal${currentFileIndex}.js`;
-            
+            const script = document.createElement('script');
+            const filename = currentFileIndex === 1 ? 'soal.js' : `soal${currentFileIndex}.js`;
+
             document.getElementById('loadingText').innerText = `Mencari ${filename}...`;
-            script.src = filename;
+            document.getElementById('loadingProgress').innerText =
+                loadedSources.length > 0 ? `Termuat: ${loadedSources.join(', ')}` : '';
+            script.src = filename + '?t=' + Date.now();   // cache-busting
 
             script.onload = () => {
                 if (window.tempQuestions && window.tempQuestions.length > 0) {
-                    window.allQuestions = window.allQuestions.concat(window.tempQuestions);
-                    window.tempQuestions = []; 
+                    const tagged = window.tempQuestions.map(q => ({ ...q, source: filename }));
+                    window.allQuestions = window.allQuestions.concat(tagged);
+                    loadedSources.push(filename);
                 }
+                window.tempQuestions = [];
                 currentFileIndex++;
-                loadQuestionBanks(); 
+                loadQuestionBanks();
             };
 
             script.onerror = () => {
                 if (window.allQuestions.length === 0) {
                     document.getElementById('loadingText').innerHTML = "<span class='text-red-400'>Error: soal.js tidak ditemukan!</span>";
+                    document.getElementById('loadingProgress').innerText = 'Pastikan file soal.js berada di folder yang sama dengan file HTML ini.';
                 } else {
                     document.getElementById('loadingScreen').classList.add('hidden');
                     document.getElementById('loginScreen').classList.remove('hidden');
-                    document.getElementById('totalSoalInfo').innerText = `Total ${window.allQuestions.length} soal tersedia di dalam sistem.`;
+                    document.getElementById('totalSoalInfo').innerText =
+                        `Total ${window.allQuestions.length} soal dari ${loadedSources.length} bank soal (${loadedSources.join(', ')}).`;
+                    refreshLoginButtons();
                 }
             };
             document.body.appendChild(script);
@@ -286,18 +421,28 @@
 
         window.onload = loadQuestionBanks;
 
-        // LOGIKA GAME & OFFLINE SESSION
+        // ===================================================================
+        // 3) LOGIKA GAME, SESSION & RIWAYAT
+        // ===================================================================
         let session = {
             username: "",
             questions: [],
             answers: [],
-            currentIndex: 0
+            currentIndex: 0,
+            startedAt: 0,
+            sources: []
         };
 
         const MAX_QUESTIONS = 20;
+        const HISTORY_KEY = 'iq_history_all';
+        const HISTORY_LIMIT = 100;
+
+        function activeKey(name) {
+            return 'iq_active_' + name.toLowerCase();
+        }
 
         function shuffleArray(array) {
-            let arr = [...array];
+            const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -305,78 +450,179 @@
             return arr;
         }
 
-        function startGame() {
+        // Kelompokkan soal per sumber file, acak masing-masing, lalu ambil
+        // BERSELANG-SELING antar bank soal (round-robin dengan urutan sumber
+        // yang diacak tiap putaran). Hasil: setiap sesi punya urutan berbeda
+        // dan soal terasa bervariasi, tidak monoton dari satu bank saja.
+        function buildInterleavedQuestions(allQuestions, maxCount) {
+            const groups = {};
+            for (const q of allQuestions) {
+                const src = q.source || 'soal.js';
+                if (!groups[src]) groups[src] = [];
+                groups[src].push(q);
+            }
+            const sources = Object.keys(groups);
+            for (const src of sources) groups[src] = shuffleArray(groups[src]);
+
+            const result = [];
+            const indices = {};
+            sources.forEach(s => indices[s] = 0);
+
+            let stillHave = true;
+            while (stillHave && result.length < maxCount) {
+                // Acak urutan sumber tiap putaran → urutan antar sesi benar-benar berbeda
+                const shuffledSources = shuffleArray(sources);
+                stillHave = false;
+                for (const src of shuffledSources) {
+                    if (result.length >= maxCount) break;
+                    if (indices[src] < groups[src].length) {
+                        const orig = groups[src][indices[src]];
+                        // Deep-copy agar tidak memutasi bank soal global
+                        const copy = {
+                            caseText: orig.caseText,
+                            options: [...orig.options],
+                            correctIndex: orig.correctIndex,
+                            explanation: orig.explanation,
+                            source: orig.source || src
+                        };
+                        result.push(copy);
+                        indices[src]++;
+                        stillHave = true;
+                    }
+                }
+            }
+
+            // Acak urutan OPSI jawaban tiap soal (rekam pemetaan correctIndex baru)
+            // agar jawaban yang benar tidak selalu di posisi yang sama antar sesi.
+            for (const q of result) {
+                const opts = q.options.map((text, originalIdx) => ({ text, originalIdx }));
+                const shuffledOpts = shuffleArray(opts);
+                q.options = shuffledOpts.map(o => o.text);
+                q.correctIndex = shuffledOpts.findIndex(o => o.originalIdx === q.correctIndex);
+            }
+            return { questions: result, sources };
+        }
+
+        function refreshLoginButtons() {
+            const name = document.getElementById('usernameInput').value.trim().toLowerCase();
+            const resumeBtn = document.getElementById('resumeBtn');
+            const historyBtn = document.getElementById('historyBtn');
+
+            const hasActive = !!(name && localStorage.getItem(activeKey(name)));
+            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            const hasHistory = history.length > 0;
+
+            resumeBtn.classList.toggle('hidden', !hasActive);
+            historyBtn.classList.toggle('hidden', !hasHistory);
+        }
+
+        document.getElementById('usernameInput').addEventListener('input', refreshLoginButtons);
+
+        function startGame(resumeIfAvailable) {
             const nameInput = document.getElementById('usernameInput').value.trim();
             if (!nameInput) {
                 alert("Silakan masukkan nama Anda terlebih dahulu.");
                 return;
             }
 
-            session.username = nameInput;
-            const storageKey = 'iq_session_' + nameInput.toLowerCase();
+            const storageKey = activeKey(nameInput);
             const savedSession = localStorage.getItem(storageKey);
 
-            if (savedSession) {
+            if (resumeIfAvailable && savedSession) {
+                // Lanjutkan sesi lama yang belum selesai
                 session = JSON.parse(savedSession);
             } else {
-                let shuffled = shuffleArray(window.allQuestions);
-                session.questions = shuffled.slice(0, Math.min(MAX_QUESTIONS, shuffled.length));
-                session.answers = new Array(session.questions.length).fill(null);
-                session.currentIndex = 0;
+                // Mau mulai baru. Bila ada sesi lama yang belum selesai & sudah ada
+                // progres, arsipkan dulu ke riwayat sebagai sesi "ditinggalkan".
+                if (savedSession) {
+                    const old = JSON.parse(savedSession);
+                    if (old.answers && old.answers.some(a => a !== null)) {
+                        const ok = confirm(`Ada sesi "${nameInput}" yang belum selesai. Mulai sesi baru akan memindahkan sesi lama ke riwayat. Lanjutkan?`);
+                        if (!ok) return;
+                        archiveSessionToHistory(old, true);
+                    }
+                }
+                const built = buildInterleavedQuestions(window.allQuestions, MAX_QUESTIONS);
+                session = {
+                    username: nameInput,
+                    questions: built.questions,
+                    answers: new Array(built.questions.length).fill(null),
+                    currentIndex: 0,
+                    startedAt: Date.now(),
+                    sources: built.sources
+                };
                 saveSession();
             }
 
             document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('historyScreen').classList.add('hidden');
+            document.getElementById('historyDetailScreen').classList.add('hidden');
             document.getElementById('gameScreen').classList.remove('hidden');
             document.getElementById('playerNameDisplay').innerText = session.username;
-            
+            document.getElementById('totalQuestionCount').innerText = session.questions.length;
+            document.getElementById('totalAnswerable').innerText = ' / ' + session.questions.length;
+
             renderQuestion();
         }
 
         function saveSession() {
-            const storageKey = 'iq_session_' + session.username.toLowerCase();
-            localStorage.setItem(storageKey, JSON.stringify(session));
+            localStorage.setItem(activeKey(session.username), JSON.stringify(session));
         }
 
         function letterOf(idx) {
             return String.fromCharCode(65 + idx);
         }
 
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function renderQuestion() {
             const qObj = session.questions[session.currentIndex];
+            const options = qObj.options;
+            const correctIdx = qObj.correctIndex;
             const answeredIdx = session.answers[session.currentIndex];
             const isAnswered = answeredIdx !== null;
 
             document.getElementById('currentQuestionNum').innerText = (session.currentIndex + 1);
-            document.getElementById('questionText').innerText = qObj.caseText;
-            
+
+            // Teks soal + badge sumber agar user tahu soal dari bank mana
+            const srcLabel = (qObj.source || 'soal.js').replace('.js', '');
+            document.getElementById('questionText').innerHTML =
+                `${escapeHtml(qObj.caseText)} <span class="source-badge">${escapeHtml(srcLabel)}</span>`;
+
             const optsContainer = document.getElementById('optionsContainer');
             optsContainer.innerHTML = "";
 
-            qObj.options.forEach((opt, idx) => {
+            options.forEach((opt, idx) => {
                 const btn = document.createElement('button');
                 let stateClasses = 'hover:bg-slate-700 hover:border-slate-500';
-                
+
                 if (isAnswered) {
                     btn.disabled = true;
-                    if (idx === qObj.correctIndex) {
-                        stateClasses = 'correct'; // Jawaban yang benar akan menjadi hijau
-                    } else if (idx === answeredIdx && idx !== qObj.correctIndex) {
-                        stateClasses = 'incorrect'; // Jawaban salah yang dipilih menjadi merah
+                    if (idx === correctIdx) {
+                        stateClasses = 'correct';
+                    } else if (idx === answeredIdx && idx !== correctIdx) {
+                        stateClasses = 'incorrect';
                     } else {
-                        stateClasses = 'faded'; // Opsi lain meredup
+                        stateClasses = 'faded';
                     }
                 }
 
                 const baseClasses = 'option-btn w-full text-left p-4 rounded-xl border flex items-center gap-3 transition-all';
                 btn.className = `${baseClasses} ${stateClasses}`;
 
-                // Tampilkan centang jika ini jawaban yang dipilih
                 const showCheck = (isAnswered && idx === answeredIdx) ? 'opacity:1; transform:scale(1);' : '';
 
                 btn.innerHTML = `
                     <span class="option-letter">${letterOf(idx)}</span>
-                    <span class="flex-1 leading-relaxed">${opt}</span>
+                    <span class="flex-1 leading-relaxed">${escapeHtml(opt)}</span>
                     <span class="check-mark text-slate-800" aria-hidden="true" style="${showCheck}">&#10003;</span>
                 `;
                 btn.onclick = () => selectOption(idx);
@@ -384,7 +630,7 @@
             });
 
             if (isAnswered) {
-                showFeedback(answeredIdx === qObj.correctIndex, qObj.explanation);
+                showFeedback(answeredIdx === correctIdx, qObj.explanation);
             } else {
                 document.getElementById('feedbackSection').classList.add('hidden');
             }
@@ -407,40 +653,36 @@
         function updateAnsweredIndicator() {
             const total = session.questions.length;
             let answered = 0;
-            
+
             const dotsContainer = document.getElementById('progressDots');
             dotsContainer.innerHTML = '';
-            
+
             for (let i = 0; i < total; i++) {
                 const ans = session.answers[i];
                 const dot = document.createElement('span');
                 let cls = 'progress-dot';
-                
+
                 if (ans !== null) {
                     answered++;
                     const isCorrect = (ans === session.questions[i].correctIndex);
                     cls += isCorrect ? ' answered-correct' : ' answered-incorrect';
                 }
-                
-                if (i === session.currentIndex) {
-                    cls += ' current';
-                }
-                
+
+                if (i === session.currentIndex) cls += ' current';
+
                 dot.className = cls;
                 dot.title = `Soal ${i + 1}`;
                 dotsContainer.appendChild(dot);
             }
-            
+
             document.getElementById('answeredCounter').innerText = answered;
         }
 
         function selectOption(idx) {
-            // Jangan izinkan mengubah jawaban setelah diklik
-            if (session.answers[session.currentIndex] !== null) return; 
-
+            if (session.answers[session.currentIndex] !== null) return;
             session.answers[session.currentIndex] = idx;
             saveSession();
-            renderQuestion(); 
+            renderQuestion();
         }
 
         function showFeedback(isCorrect, explanation) {
@@ -448,11 +690,9 @@
             const fbTitle = document.getElementById('feedbackTitle');
             const fbIcon = document.getElementById('feedbackIcon');
             const fbExp = document.getElementById('feedbackExplanation');
-            
+
             fbSec.classList.remove('hidden');
-            
-            // Trigger animasi CSS
-            void fbSec.offsetWidth; 
+            void fbSec.offsetWidth;
             fbSec.classList.add('fade-in');
 
             if (isCorrect) {
@@ -467,7 +707,7 @@
                 fbSec.style.borderColor = 'rgba(239, 68, 68, 0.4)';
             }
 
-            fbExp.innerHTML = `<strong class="text-sky-400">Pembahasan:</strong><br>${explanation}`;
+            fbExp.innerHTML = `<strong class="text-sky-400">Pembahasan:</strong><br>${escapeHtml(explanation)}`;
         }
 
         function nextQuestion() {
@@ -476,7 +716,7 @@
                 saveSession();
                 renderQuestion();
             } else {
-                stopAndScore(); 
+                stopAndScore();
             }
         }
 
@@ -488,24 +728,47 @@
             }
         }
 
+        // ============== SKOR & ARSIP RIWAYAT ==============
+        function computeScore(ses) {
+            let answeredCount = 0;
+            let correctCount = 0;
+            ses.answers.forEach((ans, idx) => {
+                if (ans !== null) {
+                    answeredCount++;
+                    if (ans === ses.questions[idx].correctIndex) correctCount++;
+                }
+            });
+            const wrongCount = answeredCount - correctCount;
+            const score = answeredCount === 0 ? 0 : Math.round((correctCount / answeredCount) * 100);
+            return { answeredCount, correctCount, wrongCount, score };
+        }
+
+        function archiveSessionToHistory(ses, abandoned) {
+            const { answeredCount, correctCount, wrongCount, score } = computeScore(ses);
+            let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            history.push({
+                username: ses.username,
+                timestamp: Date.now(),
+                startedAt: ses.startedAt || 0,
+                score: score,
+                answered: answeredCount,
+                correct: correctCount,
+                wrong: wrongCount,
+                total: ses.questions.length,
+                sources: ses.sources || [],
+                abandoned: !!abandoned,
+                questions: ses.questions,
+                answers: ses.answers
+            });
+            if (history.length > HISTORY_LIMIT) history = history.slice(history.length - HISTORY_LIMIT);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        }
+
         function stopAndScore() {
             document.getElementById('gameScreen').classList.add('hidden');
             document.getElementById('resultScreen').classList.remove('hidden');
 
-            let answeredCount = 0;
-            let correctCount = 0;
-
-            session.answers.forEach((ans, idx) => {
-                if (ans !== null) {
-                    answeredCount++;
-                    if (ans === session.questions[idx].correctIndex) {
-                        correctCount++;
-                    }
-                }
-            });
-
-            const wrongCount = answeredCount - correctCount;
-            const score = answeredCount === 0 ? 0 : Math.round((correctCount / answeredCount) * 100);
+            const { answeredCount, correctCount, wrongCount, score } = computeScore(session);
 
             document.getElementById('resultName').innerText = session.username;
             document.getElementById('finalScore').innerText = score;
@@ -513,13 +776,195 @@
             document.getElementById('correctCount').innerText = correctCount;
             document.getElementById('wrongCount').innerText = wrongCount;
 
-            localStorage.removeItem('iq_session_' + session.username.toLowerCase());
+            // Simpan ke riwayat lokal, lalu hapus sesi aktif
+            archiveSessionToHistory(session, false);
+            localStorage.removeItem(activeKey(session.username));
+
+            const note = document.getElementById('resultSavedNote');
+            note.innerText = answeredCount === 0
+                ? 'Sesi tanpa jawaban ini disimpan ke riwayat sebagai catatan.'
+                : 'Sesi ini telah disimpan ke riwayat lokal di perangkat Anda.';
         }
 
         function backToMenu() {
             document.getElementById('resultScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('usernameInput').value = ""; 
+            document.getElementById('usernameInput').value = "";
+            refreshLoginButtons();
+        }
+
+        // ===================================================================
+        // 5) TAMPILAN RIWAYAT (rekam jejak sesi)
+        // ===================================================================
+        function showHistory() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('historyDetailScreen').classList.add('hidden');
+            document.getElementById('historyScreen').classList.remove('hidden');
+
+            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            const container = document.getElementById('historyListContainer');
+            const emptyMsg = document.getElementById('historyEmpty');
+            container.innerHTML = '';
+
+            if (history.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+            emptyMsg.classList.add('hidden');
+
+            const sorted = [...history].map((rec, idx) => ({ rec, idx }))
+                                        .sort((a, b) => b.rec.timestamp - a.rec.timestamp);
+
+            sorted.forEach(({ rec, idx }) => {
+                const date = new Date(rec.timestamp);
+                const dateStr = date.toLocaleString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                const scoreColor = rec.score >= 80 ? 'text-emerald-400'
+                                  : rec.score >= 50 ? 'text-amber-400'
+                                  : 'text-red-400';
+                const statusBadge = rec.abandoned
+                    ? '<span class="text-xs px-2 py-0.5 rounded bg-amber-900/50 text-amber-300 border border-amber-700">Ditinggalkan</span>'
+                    : '<span class="text-xs px-2 py-0.5 rounded bg-sky-900/50 text-sky-300 border border-sky-700">Selesai</span>';
+
+                const sourcesLabel = (rec.sources && rec.sources.length)
+                    ? rec.sources.map(s => escapeHtml(s.replace('.js', ''))).join(', ')
+                    : '-';
+
+                const item = document.createElement('div');
+                item.className = 'history-item p-4 rounded-xl border border-slate-700 bg-slate-800/40';
+                item.innerHTML = `
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap mb-1">
+                                <span class="font-bold text-white">${escapeHtml(rec.username)}</span>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-xs text-slate-400">${dateStr}</p>
+                            <p class="text-xs text-slate-500 mt-1">Bank soal: ${sourcesLabel}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-3xl font-black ${scoreColor}">${rec.score}</div>
+                            <div class="text-xs text-slate-400">Benar ${rec.correct} &middot; Salah ${rec.wrong} &middot; Total ${rec.answered}</div>
+                        </div>
+                    </div>
+                `;
+                item.onclick = () => showHistoryDetail(idx);
+                container.appendChild(item);
+            });
+        }
+
+        function showHistoryDetail(idx) {
+            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            const rec = history[idx];
+            if (!rec) return;
+
+            document.getElementById('historyScreen').classList.add('hidden');
+            document.getElementById('historyDetailScreen').classList.remove('hidden');
+
+            const date = new Date(rec.timestamp);
+            const dateStr = date.toLocaleString('id-ID', {
+                day: '2-digit', month: 'long', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+            document.getElementById('historyDetailMeta').innerText =
+                `${rec.username} \u2022 ${dateStr} \u2022 ${rec.abandoned ? 'Ditinggalkan' : 'Selesai'}`;
+
+            const scoreBox = document.getElementById('historyDetailScore');
+            scoreBox.innerHTML = `
+                <div class="p-3 rounded-lg bg-slate-900/40 border border-slate-700">
+                    <div class="text-2xl font-black text-white">${rec.score}</div>
+                    <div class="text-xs text-slate-400">Skor</div>
+                </div>
+                <div class="p-3 rounded-lg bg-slate-900/40 border border-slate-700">
+                    <div class="text-2xl font-black text-emerald-400">${rec.correct}</div>
+                    <div class="text-xs text-slate-400">Benar</div>
+                </div>
+                <div class="p-3 rounded-lg bg-slate-900/40 border border-slate-700">
+                    <div class="text-2xl font-black text-red-400">${rec.wrong}</div>
+                    <div class="text-xs text-slate-400">Salah</div>
+                </div>
+                <div class="p-3 rounded-lg bg-slate-900/40 border border-slate-700">
+                    <div class="text-2xl font-black text-sky-400">${rec.answered}/${rec.total}</div>
+                    <div class="text-xs text-slate-400">Dikerjakan</div>
+                </div>
+            `;
+
+            const qContainer = document.getElementById('historyDetailQuestions');
+            qContainer.innerHTML = '';
+
+            rec.questions.forEach((q, qIdx) => {
+                const ans = rec.answers[qIdx];
+                const options = q.options;
+                const correctIdx = q.correctIndex;
+                const isAnswered = ans !== null;
+                const isCorrect = isAnswered && ans === correctIdx;
+                const srcLabel = (q.source || 'soal.js').replace('.js', '');
+
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-xl border bg-slate-800/40 ' +
+                    (isAnswered ? (isCorrect ? 'border-emerald-700/60' : 'border-red-700/60') : 'border-slate-700');
+
+                let optsHtml = '';
+                options.forEach((opt, oIdx) => {
+                    let cls = 'border-slate-700 bg-slate-900/40 text-slate-400';
+                    let mark = '';
+                    if (isAnswered) {
+                        if (oIdx === correctIdx) {
+                            cls = 'border-emerald-600 bg-emerald-900/30 text-emerald-300';
+                            mark = '<span class="ml-auto text-xs whitespace-nowrap">Jawaban benar</span>';
+                        } else if (oIdx === ans) {
+                            cls = 'border-red-600 bg-red-900/30 text-red-300';
+                            mark = '<span class="ml-auto text-xs whitespace-nowrap">Jawaban Anda</span>';
+                        }
+                    }
+                    optsHtml += `
+                        <div class="flex items-center gap-3 p-2.5 rounded-lg border ${cls}">
+                            <span class="option-letter">${letterOf(oIdx)}</span>
+                            <span class="flex-1 text-sm">${escapeHtml(opt)}</span>
+                            ${mark}
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="flex items-start gap-2 mb-2">
+                        <span class="text-sky-400 font-bold text-sm shrink-0">Soal ${qIdx + 1}.</span>
+                        <span class="source-badge">${escapeHtml(srcLabel)}</span>
+                    </div>
+                    <p class="text-sm text-slate-200 mb-3 leading-relaxed">${escapeHtml(q.caseText)}</p>
+                    <div class="space-y-2">${optsHtml}</div>
+                    <div class="mt-3 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                        <p class="text-xs ${isAnswered ? (isCorrect ? 'text-emerald-400' : 'text-red-400') : 'text-slate-400'} font-bold mb-1">
+                            ${isAnswered ? (isCorrect ? '\u2713 Benar' : '\u2717 Salah') : 'Tidak dijawab'}
+                        </p>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            <strong class="text-sky-400">Pembahasan:</strong> ${escapeHtml(q.explanation)}
+                        </p>
+                    </div>
+                `;
+                qContainer.appendChild(card);
+            });
+        }
+
+        function backToHistoryList() {
+            document.getElementById('historyDetailScreen').classList.add('hidden');
+            document.getElementById('historyScreen').classList.remove('hidden');
+        }
+
+        function backToLoginFromHistory() {
+            document.getElementById('historyScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            refreshLoginButtons();
+        }
+
+        function clearHistory() {
+            if (confirm('Hapus SEMUA riwayat sesi yang tersimpan di perangkat ini? Tindakan ini tidak dapat dibatalkan.')) {
+                localStorage.removeItem(HISTORY_KEY);
+                showHistory();
+            }
         }
     </script>
 </body>

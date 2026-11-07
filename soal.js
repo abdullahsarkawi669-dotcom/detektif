@@ -1,4 +1,4 @@
-const questions = [
+var tempQuestions = [
     // Soal 1
     {
         caseText: "Dua orang memesan minuman es racun yang identik di sebuah bar. Orang pertama meminumnya dengan sangat cepat dalam sekali teguk. Orang kedua duduk santai dan meminumnya perlahan. Tragisnya, orang kedua meninggal keracunan, sedangkan orang pertama sehat walafiat. Mengapa bisa demikian?",
